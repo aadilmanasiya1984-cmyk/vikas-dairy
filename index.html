@@ -130,6 +130,7 @@
     .modal-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--green); margin-bottom: 8px; }
     .modal-box p { font-size: 14px; color: var(--text-light); line-height: 1.6; margin-bottom: 24px; }
     .modal-close { background: var(--green); color: #fff; border: none; border-radius: 8px; padding: 12px 28px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; }
+    .loading-bar { text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 14px; }
     @media (max-width: 700px) {
       .hero { grid-template-columns: 1fr; gap: 0; padding: 48px 5% 40px; }
       .hero::before { display: none; }
@@ -223,7 +224,7 @@
         <div class="section-sub">Handpicked daily. Crafted with care. Pure as nature intended.</div>
       </div>
     </div>
-    <div class="products-grid" id="productsGrid"></div>
+    <div class="products-grid" id="productsGrid"><div class="loading-bar">Loading products...</div></div>
   </section>
 
   <section class="section why-bg" id="about">
@@ -287,7 +288,24 @@
     </div>
   </div>
 
-  <script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWw068HieZNTGOK0Z3Sah3cqQSNZfolV4",
+      authDomain: "vikas-dairy-820e9.firebaseapp.com",
+      databaseURL: "https://vikas-dairy-820e9-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "vikas-dairy-820e9",
+      storageBucket: "vikas-dairy-820e9.firebasestorage.app",
+      messagingSenderId: "535054999808",
+      appId: "1:535054999808:web:fedf1d83537ba9080593e5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
     const defaultProducts = [
       { id:1, name:'Full Cream Milk', desc:'Rich, pure & fresh daily', price:60, unit:'per litre', emoji:'🥛', badge:'Best Seller', image:'' },
       { id:2, name:'Fresh Curd', desc:'Thick, creamy & probiotic', price:40, unit:'per 500g', emoji:'🍶', badge:'Popular', image:'' },
@@ -298,25 +316,38 @@
       { id:7, name:'Paneer', desc:'Soft & fresh daily', price:80, unit:'per 250g', emoji:'🧀', badge:'', image:'' },
       { id:8, name:'Butter', desc:'Creamy farm butter', price:60, unit:'per 100g', emoji:'🫙', badge:'', image:'' },
     ];
-    function loadSettings() {
-      try {
-        const s = JSON.parse(localStorage.getItem('vikasDairySettings') || '{}');
-        if (s.phone) document.getElementById('contactPhone').textContent = s.phone;
-        if (s.address) { document.getElementById('contactAddress').textContent = s.address; document.getElementById('storeAddress').textContent = s.address; }
-        if (s.whatsapp) document.getElementById('contactWA').textContent = s.whatsapp;
-        if (s.hours) document.getElementById('contactHours').textContent = s.hours;
-        if (s.h1) document.getElementById('h1').textContent = s.h1;
-        if (s.h2) document.getElementById('h2').textContent = s.h2;
-        if (s.h3) document.getElementById('h3').textContent = s.h3;
-        if (s.h4) document.getElementById('h4').textContent = s.h4;
-      } catch(e) {}
-    }
-    function getProducts() {
-      try { const p = JSON.parse(localStorage.getItem('vikasDairyProducts') || '[]'); return p.length ? p : defaultProducts; }
-      catch(e) { return defaultProducts; }
-    }
-    let products = getProducts();
+
+    let products = [];
     let cart = [];
+
+    // ── Seed default products if Firebase is empty ──
+    const productsRef = ref(db, 'products');
+    get(productsRef).then(snap => {
+      if (!snap.exists()) {
+        set(productsRef, defaultProducts);
+      }
+    });
+
+    // ── Listen to products (real-time) ──
+    onValue(productsRef, (snap) => {
+      const data = snap.val();
+      products = data ? (Array.isArray(data) ? data : Object.values(data)) : defaultProducts;
+      renderProducts();
+    });
+
+    // ── Listen to settings (real-time) ──
+    onValue(ref(db, 'settings'), (snap) => {
+      const s = snap.val() || {};
+      if (s.phone) document.getElementById('contactPhone').textContent = s.phone;
+      if (s.address) { document.getElementById('contactAddress').textContent = s.address; document.getElementById('storeAddress').textContent = s.address; }
+      if (s.whatsapp) document.getElementById('contactWA').textContent = s.whatsapp;
+      if (s.hours) document.getElementById('contactHours').textContent = s.hours;
+      if (s.h1) document.getElementById('h1').textContent = s.h1;
+      if (s.h2) document.getElementById('h2').textContent = s.h2;
+      if (s.h3) document.getElementById('h3').textContent = s.h3;
+      if (s.h4) document.getElementById('h4').textContent = s.h4;
+    });
+
     function productMediaHTML(p) {
       if (p.image && p.image.trim()) return '<div class="product-img-wrap"><img src="' + p.image + '" alt="' + p.name + '" onerror="this.style.display=\'none\'" /></div>';
       return '<div class="product-img-wrap"><span class="product-emoji-fallback">' + (p.emoji||'🥛') + '</span></div>';
@@ -333,10 +364,11 @@
         '<div class="product-info"><div class="product-name">' + p.name + '</div>' +
         '<div class="product-desc">' + p.desc + '</div>' +
         '<div class="product-price">&#8377;' + p.price + ' <span class="product-unit">' + p.unit + '</span></div></div>' +
-        '<button class="add-btn" id="btn-' + p.id + '" onclick="addToCart(' + p.id + ')">Add to Cart</button></div>'
+        '<button class="add-btn" id="btn-' + p.id + '" onclick="window._addToCart(' + p.id + ')">Add to Cart</button></div>'
       ).join('');
     }
-    function addToCart(id) {
+
+    window._addToCart = function(id) {
       const p = products.find(x => x.id === id);
       const ex = cart.find(x => x.id === id);
       if (ex) ex.qty++; else cart.push(Object.assign({}, p, {qty:1}));
@@ -346,12 +378,14 @@
       updateCart();
       const cs = document.getElementById('cartSection');
       if (!cs.classList.contains('visible')) { cs.classList.add('visible'); cs.scrollIntoView({behavior:'smooth', block:'nearest'}); }
-    }
-    function removeFromCart(id) {
+    };
+
+    window._removeFromCart = function(id) {
       cart = cart.filter(x => x.id !== id);
       updateCart();
       if (!cart.length) document.getElementById('cartSection').classList.remove('visible');
-    }
+    };
+
     function updateCart() {
       document.getElementById('cartCount').textContent = cart.reduce((s,x)=>s+x.qty,0);
       const body = document.getElementById('cartBody');
@@ -361,16 +395,20 @@
         '<div class="cart-item"><div class="cart-item-info">' + cartThumbHTML(x) +
         '<div><div class="cart-item-name">' + x.name + '</div><div class="cart-item-qty">Qty: ' + x.qty + ' × &#8377;' + x.price + '</div></div></div>' +
         '<div class="cart-item-right"><span class="cart-item-price">&#8377;' + (x.price * x.qty) + '</span>' +
-        '<button class="remove-btn" onclick="removeFromCart(' + x.id + ')">×</button></div></div>'
+        '<button class="remove-btn" onclick="window._removeFromCart(' + x.id + ')">×</button></div></div>'
       ).join('');
       document.getElementById('cartTotal').textContent = '₹' + cart.reduce((s,x)=>s+x.price*x.qty,0);
       footer.style.display = 'flex';
     }
-    function placeOrder() {
+
+    window.placeOrder = function() {
       cart = []; updateCart();
       document.getElementById('cartSection').classList.remove('visible');
       document.getElementById('orderModal').classList.add('show');
-    }
+    };
+  </script>
+
+  <script>
     function closeModal() { document.getElementById('orderModal').classList.remove('show'); }
     function toggleCart() {
       const cs = document.getElementById('cartSection');
@@ -380,8 +418,6 @@
     function scrollToId(id) { const el = document.getElementById(id); if (el) el.scrollIntoView({behavior:'smooth'}); }
     function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
     function closeMenu() { document.getElementById('navLinks').classList.remove('open'); }
-    loadSettings();
-    renderProducts();
   </script>
 </body>
 </html>
