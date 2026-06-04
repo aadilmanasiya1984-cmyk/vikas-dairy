@@ -157,8 +157,8 @@
         <div class="page-sub">Welcome back! Here's an overview of Vikas Dairy.</div>
       </div>
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-icon"><i class="ti ti-milk"></i></div><div class="stat-val" id="dash-products">8</div><div class="stat-label">Total Products</div></div>
-        <div class="stat-card"><div class="stat-icon"><i class="ti ti-star"></i></div><div class="stat-val" id="dash-featured">3</div><div class="stat-label">Badged Items</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="ti ti-milk"></i></div><div class="stat-val" id="dash-products">—</div><div class="stat-label">Total Products</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="ti ti-star"></i></div><div class="stat-val" id="dash-featured">—</div><div class="stat-label">Badged Items</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="ti ti-clock"></i></div><div class="stat-val">3</div><div class="stat-label">Pickup Slots</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="ti ti-check"></i></div><div class="stat-val">Live</div><div class="stat-label">Website Status</div></div>
       </div>
@@ -327,7 +327,24 @@
   </div>
 </div>
 
-<script>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBWw068HieZNTGOK0Z3Sah3cqQSNZfolV4",
+    authDomain: "vikas-dairy-820e9.firebaseapp.com",
+    databaseURL: "https://vikas-dairy-820e9-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "vikas-dairy-820e9",
+    storageBucket: "vikas-dairy-820e9.firebasestorage.app",
+    messagingSenderId: "535054999808",
+    appId: "1:535054999808:web:fedf1d83537ba9080593e5"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
   const DEFAULT_PRODUCTS = [
     { id:1, name:'Full Cream Milk', desc:'Rich, pure & fresh daily', price:60, unit:'per litre', emoji:'🥛', badge:'Best Seller', image:'' },
     { id:2, name:'Fresh Curd', desc:'Thick, creamy & probiotic', price:40, unit:'per 500g', emoji:'🍶', badge:'Popular', image:'' },
@@ -339,12 +356,211 @@
     { id:8, name:'Butter', desc:'Creamy farm butter', price:60, unit:'per 100g', emoji:'🫙', badge:'', image:'' },
   ];
 
-  function getProducts() { try { const p=JSON.parse(localStorage.getItem('vikasDairyProducts')||'[]'); return p.length?p:JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)); } catch(e){return JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));} }
-  function saveProducts(p) { localStorage.setItem('vikasDairyProducts', JSON.stringify(p)); }
-  function getSettings() { try { return JSON.parse(localStorage.getItem('vikasDairySettings')||'{}'); } catch(e){return {};} }
-  function saveSettingsObj(s) { localStorage.setItem('vikasDairySettings', JSON.stringify(s)); }
-  function getCreds() { return { user: localStorage.getItem('vdUser')||'admin', pass: localStorage.getItem('vdPass')||'vikasdairy123' }; }
+  let cachedProducts = [];
 
+  // ── Credentials stored in Firebase ──
+  async function getCreds() {
+    const snap = await get(ref(db, 'adminCreds'));
+    const d = snap.val();
+    return { user: (d && d.user) || 'admin', pass: (d && d.pass) || 'vikasdairy123' };
+  }
+
+  // ── Products real-time ──
+  onValue(ref(db, 'products'), (snap) => {
+    const data = snap.val();
+    cachedProducts = data ? (Array.isArray(data) ? data : Object.values(data)) : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+    if (document.getElementById('adminLayout').style.display !== 'none') {
+      renderDashboard(); renderProductsTable();
+    }
+  });
+
+  // ── Settings real-time ──
+  onValue(ref(db, 'settings'), (snap) => {
+    window._cachedSettings = snap.val() || {};
+    if (document.getElementById('adminLayout').style.display !== 'none') loadSettingsForm();
+  });
+
+  function getProducts() { return cachedProducts.length ? cachedProducts : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)); }
+
+  function saveProducts(p) {
+    set(ref(db, 'products'), p);
+  }
+
+  function saveSettingsObj(s) {
+    set(ref(db, 'settings'), s);
+  }
+
+  function getSettings() { return window._cachedSettings || {}; }
+
+  // ── Login ──
+  window.doLogin = async function() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    const c = await getCreds();
+    if (u === c.user && p === c.pass) {
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('adminLayout').style.display = 'flex';
+      document.getElementById('mobHeader').style.display = 'flex';
+      renderDashboard(); renderProductsTable(); loadSettingsForm();
+    } else {
+      document.getElementById('loginError').textContent = 'Invalid username or password.';
+    }
+  };
+
+  window.doLogout = function() {
+    document.getElementById('adminLayout').style.display = 'none';
+    document.getElementById('mobHeader').style.display = 'none';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+  };
+
+  window.renderDashboard = function() {
+    const prods = getProducts();
+    document.getElementById('dash-products').textContent = prods.length;
+    document.getElementById('dash-featured').textContent = prods.filter(p=>p.badge).length;
+    document.getElementById('dashProductsTable').innerHTML = prods.map(p=>
+      '<tr><td>' + thumbHTML(p) + '</td><td style="font-weight:500;">' + p.name + '</td>' +
+      '<td style="font-weight:500;color:var(--gold);">&#8377;' + p.price + '</td>' +
+      '<td>' + (p.badge ? '<span class="badge-pill">'+p.badge+'</span>' : '<span style="color:#ccc;">—</span>') + '</td></tr>'
+    ).join('');
+  };
+
+  window.renderProductsTable = function() {
+    const prods = getProducts();
+    document.getElementById('productsTableBody').innerHTML = prods.map(p=>
+      '<tr><td>' + thumbHTML(p) + '</td>' +
+      '<td style="font-weight:500;">' + p.name + '</td>' +
+      '<td style="color:var(--text-light);font-size:13px;">' + p.desc + '</td>' +
+      '<td style="font-weight:600;color:var(--gold);">&#8377;' + p.price + '</td>' +
+      '<td style="color:var(--text-light);">' + p.unit + '</td>' +
+      '<td>' + (p.badge ? '<span class="badge-pill">'+p.badge+'</span>' : '—') + '</td>' +
+      '<td><button class="action-btn" onclick="openEdit('+p.id+')"><i class="ti ti-edit" style="font-size:13px;"></i> Edit</button>' +
+      '<button class="action-btn danger" onclick="deleteProduct('+p.id+')"><i class="ti ti-trash" style="font-size:13px;"></i></button></td></tr>'
+    ).join('');
+  };
+
+  window.addProduct = function() {
+    const emoji = document.getElementById('np-emoji').value.trim() || '🥛';
+    const name = document.getElementById('np-name').value.trim();
+    const desc = document.getElementById('np-desc').value.trim();
+    const price = parseInt(document.getElementById('np-price').value) || 0;
+    const unit = document.getElementById('np-unit').value.trim();
+    const badge = document.getElementById('np-badge').value.trim();
+    const image = document.getElementById('np-img-data').value;
+    if (!name || !price) { alert('Product name aur price daalo.'); return; }
+    const prods = getProducts();
+    const newId = Math.max(0, ...prods.map(p=>p.id)) + 1;
+    prods.push({ id:newId, name, desc, price, unit, emoji, badge, image });
+    saveProducts(prods);
+    ['np-name','np-desc','np-price','np-unit','np-badge'].forEach(id=>document.getElementById(id).value='');
+    clearImage('np-thumb','np-fname','np-upload-box','np-img-data','np-url-input','np-url-wrap','np-emoji');
+    showMsg('addMsg');
+  };
+
+  window.deleteProduct = function(id) {
+    if (!confirm('Is product ko delete karna hai?')) return;
+    saveProducts(getProducts().filter(p=>p.id!==id));
+  };
+
+  window.openEdit = function(id) {
+    const p = getProducts().find(x=>x.id===id);
+    if (!p) return;
+    document.getElementById('edit-id').value = p.id;
+    document.getElementById('edit-emoji').value = p.emoji;
+    document.getElementById('edit-name').value = p.name;
+    document.getElementById('edit-desc').value = p.desc;
+    document.getElementById('edit-price').value = p.price;
+    document.getElementById('edit-unit').value = p.unit;
+    document.getElementById('edit-badge').value = p.badge;
+    document.getElementById('edit-img-data').value = p.image || '';
+    document.getElementById('edit-url-input').value = '';
+    document.getElementById('edit-url-wrap').classList.remove('show');
+    if (p.image) {
+      setImagePreview('edit-thumb','edit-fname','edit-upload-box','edit-img-data', p.image, 'Saved image');
+    } else {
+      clearImage('edit-thumb','edit-fname','edit-upload-box','edit-img-data','edit-url-input','edit-url-wrap','edit-emoji');
+      document.getElementById('edit-thumb').innerHTML = p.emoji || '🥛';
+    }
+    document.getElementById('editModal').style.display = 'flex';
+  };
+
+  window.closeEdit = function() { document.getElementById('editModal').style.display = 'none'; };
+
+  window.saveEdit = function() {
+    const id = parseInt(document.getElementById('edit-id').value);
+    const prods = getProducts();
+    const idx = prods.findIndex(p=>p.id===id);
+    if (idx===-1) return;
+    prods[idx] = {
+      id,
+      emoji: document.getElementById('edit-emoji').value.trim(),
+      name: document.getElementById('edit-name').value.trim(),
+      desc: document.getElementById('edit-desc').value.trim(),
+      price: parseInt(document.getElementById('edit-price').value)||0,
+      unit: document.getElementById('edit-unit').value.trim(),
+      badge: document.getElementById('edit-badge').value.trim(),
+      image: document.getElementById('edit-img-data').value
+    };
+    saveProducts(prods);
+    closeEdit();
+    showMsg('addMsg');
+  };
+
+  window.loadSettingsForm = function() {
+    const s = getSettings();
+    document.getElementById('s-phone').value = s.phone||'';
+    document.getElementById('s-wa').value = s.whatsapp||'';
+    document.getElementById('s-address').value = s.address||'';
+    document.getElementById('s-hours').value = s.hours||'';
+    document.getElementById('s-email').value = s.email||'';
+    document.getElementById('s-h1').value = s.h1||'6:00 AM – 10:00 AM';
+    document.getElementById('s-h2').value = s.h2||'12:00 PM – 2:00 PM';
+    document.getElementById('s-h3').value = s.h3||'5:00 PM – 8:00 PM';
+    document.getElementById('s-h4').value = s.h4||'7:00 AM – 12:00 PM';
+    // username from Firebase creds
+    getCreds().then(c => { document.getElementById('s-user').value = c.user; });
+  };
+
+  window.saveSettings = function() {
+    const s = getSettings();
+    s.phone = document.getElementById('s-phone').value.trim();
+    s.whatsapp = document.getElementById('s-wa').value.trim();
+    s.address = document.getElementById('s-address').value.trim();
+    s.hours = document.getElementById('s-hours').value.trim();
+    s.email = document.getElementById('s-email').value.trim();
+    saveSettingsObj(s); showMsg('settingsMsg');
+  };
+
+  window.saveHours = function() {
+    const s = getSettings();
+    s.h1 = document.getElementById('s-h1').value.trim();
+    s.h2 = document.getElementById('s-h2').value.trim();
+    s.h3 = document.getElementById('s-h3').value.trim();
+    s.h4 = document.getElementById('s-h4').value.trim();
+    saveSettingsObj(s); showMsg('hoursMsg');
+  };
+
+  window.saveCreds = function() {
+    const u = document.getElementById('s-user').value.trim();
+    const p = document.getElementById('s-pass').value;
+    if (!u) { alert('Username empty nahi ho sakta.'); return; }
+    const creds = { user: u, pass: p || undefined };
+    if (!p) {
+      getCreds().then(c => { set(ref(db, 'adminCreds'), { user: u, pass: c.pass }); });
+    } else {
+      set(ref(db, 'adminCreds'), { user: u, pass: p });
+    }
+    document.getElementById('s-pass').value = '';
+    showMsg('credsMsg');
+  };
+</script>
+
+<script>
+  function thumbHTML(p) {
+    if (p.image && p.image.trim()) return '<img src="' + p.image + '" class="prod-thumb" alt="' + p.name + '" onerror="this.outerHTML=\'<span class=prod-thumb-emoji>' + (p.emoji||'🥛') + '</span>\'" />';
+    return '<span class="prod-thumb-emoji">' + (p.emoji||'🥛') + '</span>';
+  }
   function handleFileSelect(fileInputId, thumbId, fnameId, boxId, dataId, emojiId) {
     const file = document.getElementById(fileInputId).files[0];
     if (!file) return;
@@ -373,32 +589,11 @@
     if (urlWrapId) document.getElementById(urlWrapId).classList.remove('show');
   }
   function toggleUrlInput(wrapId) { document.getElementById(wrapId).classList.toggle('show'); }
-  function thumbHTML(p) {
-    if (p.image && p.image.trim()) return '<img src="' + p.image + '" class="prod-thumb" alt="' + p.name + '" onerror="this.outerHTML=\'<span class=prod-thumb-emoji>' + (p.emoji||'🥛') + '</span>\'" />';
-    return '<span class="prod-thumb-emoji">' + (p.emoji||'🥛') + '</span>';
+  function showMsg(id) {
+    const el = document.getElementById(id);
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), 2500);
   }
-
-  function doLogin() {
-    const u = document.getElementById('loginUser').value.trim();
-    const p = document.getElementById('loginPass').value;
-    const c = getCreds();
-    if (u === c.user && p === c.pass) {
-      document.getElementById('loginOverlay').style.display = 'none';
-      document.getElementById('adminLayout').style.display = 'flex';
-      document.getElementById('mobHeader').style.display = 'flex';
-      initAdmin();
-    } else {
-      document.getElementById('loginError').textContent = 'Invalid username or password.';
-    }
-  }
-  function doLogout() {
-    document.getElementById('adminLayout').style.display = 'none';
-    document.getElementById('mobHeader').style.display = 'none';
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('loginUser').value = '';
-    document.getElementById('loginPass').value = '';
-  }
-
   function showPage(name) {
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -408,144 +603,6 @@
     if (name==='products') renderProductsTable();
     if (name==='dashboard') renderDashboard();
     if (name==='settings') loadSettingsForm();
-  }
-
-  function initAdmin() { renderDashboard(); renderProductsTable(); loadSettingsForm(); }
-
-  function renderDashboard() {
-    const prods = getProducts();
-    document.getElementById('dash-products').textContent = prods.length;
-    document.getElementById('dash-featured').textContent = prods.filter(p=>p.badge).length;
-    document.getElementById('dashProductsTable').innerHTML = prods.map(p=>
-      '<tr><td>' + thumbHTML(p) + '</td><td style="font-weight:500;">' + p.name + '</td>' +
-      '<td style="font-weight:500;color:var(--gold);">&#8377;' + p.price + '</td>' +
-      '<td>' + (p.badge ? '<span class="badge-pill">'+p.badge+'</span>' : '<span style="color:#ccc;">—</span>') + '</td></tr>'
-    ).join('');
-  }
-
-  function renderProductsTable() {
-    const prods = getProducts();
-    document.getElementById('productsTableBody').innerHTML = prods.map(p=>
-      '<tr><td>' + thumbHTML(p) + '</td>' +
-      '<td style="font-weight:500;">' + p.name + '</td>' +
-      '<td style="color:var(--text-light);font-size:13px;">' + p.desc + '</td>' +
-      '<td style="font-weight:600;color:var(--gold);">&#8377;' + p.price + '</td>' +
-      '<td style="color:var(--text-light);">' + p.unit + '</td>' +
-      '<td>' + (p.badge ? '<span class="badge-pill">'+p.badge+'</span>' : '—') + '</td>' +
-      '<td><button class="action-btn" onclick="openEdit('+p.id+')"><i class="ti ti-edit" style="font-size:13px;"></i> Edit</button>' +
-      '<button class="action-btn danger" onclick="deleteProduct('+p.id+')"><i class="ti ti-trash" style="font-size:13px;"></i></button></td></tr>'
-    ).join('');
-  }
-
-  function addProduct() {
-    const emoji = document.getElementById('np-emoji').value.trim() || '🥛';
-    const name = document.getElementById('np-name').value.trim();
-    const desc = document.getElementById('np-desc').value.trim();
-    const price = parseInt(document.getElementById('np-price').value) || 0;
-    const unit = document.getElementById('np-unit').value.trim();
-    const badge = document.getElementById('np-badge').value.trim();
-    const image = document.getElementById('np-img-data').value;
-    if (!name || !price) { alert('Product name aur price daalo.'); return; }
-    const prods = getProducts();
-    const newId = Math.max(0, ...prods.map(p=>p.id)) + 1;
-    prods.push({ id:newId, name, desc, price, unit, emoji, badge, image });
-    saveProducts(prods);
-    ['np-name','np-desc','np-price','np-unit','np-badge'].forEach(id=>document.getElementById(id).value='');
-    clearImage('np-thumb','np-fname','np-upload-box','np-img-data','np-url-input','np-url-wrap','np-emoji');
-    renderProductsTable(); renderDashboard();
-    showMsg('addMsg');
-  }
-
-  function deleteProduct(id) {
-    if (!confirm('Is product ko delete karna hai?')) return;
-    saveProducts(getProducts().filter(p=>p.id!==id));
-    renderProductsTable(); renderDashboard();
-  }
-
-  function openEdit(id) {
-    const p = getProducts().find(x=>x.id===id);
-    if (!p) return;
-    document.getElementById('edit-id').value = p.id;
-    document.getElementById('edit-emoji').value = p.emoji;
-    document.getElementById('edit-name').value = p.name;
-    document.getElementById('edit-desc').value = p.desc;
-    document.getElementById('edit-price').value = p.price;
-    document.getElementById('edit-unit').value = p.unit;
-    document.getElementById('edit-badge').value = p.badge;
-    document.getElementById('edit-img-data').value = p.image || '';
-    document.getElementById('edit-url-input').value = '';
-    document.getElementById('edit-url-wrap').classList.remove('show');
-    if (p.image) {
-      setImagePreview('edit-thumb','edit-fname','edit-upload-box','edit-img-data', p.image, 'Saved image');
-    } else {
-      clearImage('edit-thumb','edit-fname','edit-upload-box','edit-img-data','edit-url-input','edit-url-wrap','edit-emoji');
-      document.getElementById('edit-thumb').innerHTML = p.emoji || '🥛';
-    }
-    document.getElementById('editModal').style.display = 'flex';
-  }
-  function closeEdit() { document.getElementById('editModal').style.display = 'none'; }
-  function saveEdit() {
-    const id = parseInt(document.getElementById('edit-id').value);
-    const prods = getProducts();
-    const idx = prods.findIndex(p=>p.id===id);
-    if (idx===-1) return;
-    prods[idx] = {
-      id,
-      emoji: document.getElementById('edit-emoji').value.trim(),
-      name: document.getElementById('edit-name').value.trim(),
-      desc: document.getElementById('edit-desc').value.trim(),
-      price: parseInt(document.getElementById('edit-price').value)||0,
-      unit: document.getElementById('edit-unit').value.trim(),
-      badge: document.getElementById('edit-badge').value.trim(),
-      image: document.getElementById('edit-img-data').value
-    };
-    saveProducts(prods);
-    closeEdit(); renderProductsTable(); renderDashboard();
-  }
-
-  function loadSettingsForm() {
-    const s = getSettings();
-    document.getElementById('s-phone').value = s.phone||'';
-    document.getElementById('s-wa').value = s.whatsapp||'';
-    document.getElementById('s-address').value = s.address||'';
-    document.getElementById('s-hours').value = s.hours||'';
-    document.getElementById('s-email').value = s.email||'';
-    document.getElementById('s-h1').value = s.h1||'6:00 AM – 10:00 AM';
-    document.getElementById('s-h2').value = s.h2||'12:00 PM – 2:00 PM';
-    document.getElementById('s-h3').value = s.h3||'5:00 PM – 8:00 PM';
-    document.getElementById('s-h4').value = s.h4||'7:00 AM – 12:00 PM';
-    document.getElementById('s-user').value = getCreds().user;
-  }
-  function saveSettings() {
-    const s = getSettings();
-    s.phone = document.getElementById('s-phone').value.trim();
-    s.whatsapp = document.getElementById('s-wa').value.trim();
-    s.address = document.getElementById('s-address').value.trim();
-    s.hours = document.getElementById('s-hours').value.trim();
-    s.email = document.getElementById('s-email').value.trim();
-    saveSettingsObj(s); showMsg('settingsMsg');
-  }
-  function saveHours() {
-    const s = getSettings();
-    s.h1 = document.getElementById('s-h1').value.trim();
-    s.h2 = document.getElementById('s-h2').value.trim();
-    s.h3 = document.getElementById('s-h3').value.trim();
-    s.h4 = document.getElementById('s-h4').value.trim();
-    saveSettingsObj(s); showMsg('hoursMsg');
-  }
-  function saveCreds() {
-    const u = document.getElementById('s-user').value.trim();
-    const p = document.getElementById('s-pass').value;
-    if (!u) { alert('Username empty nahi ho sakta.'); return; }
-    if (u) localStorage.setItem('vdUser', u);
-    if (p) localStorage.setItem('vdPass', p);
-    document.getElementById('s-pass').value = '';
-    showMsg('credsMsg');
-  }
-  function showMsg(id) {
-    const el = document.getElementById(id);
-    el.classList.add('show');
-    setTimeout(()=>el.classList.remove('show'), 2500);
   }
   function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('mob-open');
