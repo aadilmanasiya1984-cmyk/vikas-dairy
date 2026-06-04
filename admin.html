@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Vikas Dairy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    :root {
+      --green: #1a4a2e; --green-mid: #2d6a4f; --gold: #b8860b; --gold-light: #d4a017;
+      --cream: #faf6ef; --cream-dark: #f0e8d8; --text: #1c1c1c; --text-light: #777;
+      --border: #e2d9c8; --danger: #c0392b; --success: #1a7a3a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Outfit', sans-serif; background: #f4f0e8; color: var(--text); min-height: 100vh; }
+    .login-overlay { position: fixed; inset: 0; background: var(--green); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    .login-box { background: #fff; border-radius: 16px; padding: 40px; width: 100%; max-width: 360px; text-align: center; }
+    .login-logo { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 700; color: var(--green); margin-bottom: 4px; }
+    .login-logo em { color: var(--gold); font-style: normal; }
+    .login-sub { font-size: 13px; color: var(--text-light); margin-bottom: 28px; }
+    .login-box input { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: 'Outfit', sans-serif; margin-bottom: 12px; outline: none; transition: border-color 0.2s; }
+    .login-box input:focus { border-color: var(--green); }
+    .login-btn { width: 100%; background: var(--green); color: #fff; border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; }
+    .login-error { font-size: 13px; color: var(--danger); margin-top: 10px; min-height: 18px; }
+    .login-hint { font-size: 12px; color: var(--text-light); margin-top: 16px; }
+    .admin-layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 240px; background: var(--green); flex-shrink: 0; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .sidebar-logo h2 { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700; color: #fff; }
+    .sidebar-logo h2 em { color: var(--gold-light); font-style: normal; }
+    .sidebar-logo p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .sidebar-nav { padding: 16px 12px; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.65); transition: background 0.15s, color 0.15s; margin-bottom: 2px; }
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .nav-item.active { background: rgba(255,255,255,0.12); color: #fff; }
+    .nav-item i { font-size: 18px; }
+    .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .logout-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5); background: none; border: none; font-family: 'Outfit', sans-serif; width: 100%; }
+    .logout-btn:hover { color: #fff; }
+    .back-link { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.5); text-decoration: none; margin-bottom: 4px; }
+    .back-link:hover { color: #fff; }
+    .main { flex: 1; padding: 32px; overflow-x: hidden; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .page-header { margin-bottom: 28px; }
+    .page-title { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 700; color: var(--green); }
+    .page-sub { font-size: 14px; color: var(--text-light); margin-top: 4px; font-weight: 300; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .stat-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px; }
+    .stat-icon { font-size: 22px; margin-bottom: 10px; color: var(--green); }
+    .stat-val { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 700; color: var(--green); }
+    .stat-label { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+    .panel { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 20px; }
+    .panel-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700; color: var(--green); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group select { padding: 11px 13px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: 'Outfit', sans-serif; outline: none; transition: border-color 0.2s; background: var(--cream); color: var(--text); }
+    .form-group input:focus { border-color: var(--green); background: #fff; }
+    .save-btn { background: var(--green); color: #fff; border: none; border-radius: 8px; padding: 11px 24px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px; }
+    .save-btn:hover { background: var(--green-mid); }
+    .success-msg { font-size: 13px; color: var(--success); margin-left: 12px; display: none; }
+    .success-msg.show { display: inline; }
+    .img-upload-box { border: 2px dashed var(--border); border-radius: 10px; padding: 0; background: var(--cream); transition: border-color 0.2s; overflow: hidden; }
+    .img-upload-box.has-image { border-style: solid; border-color: var(--green-mid); }
+    .img-upload-inner { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+    .img-thumb-area { width: 64px; height: 64px; border-radius: 8px; flex-shrink: 0; background: var(--cream-dark); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 28px; }
+    .img-thumb-area img { width: 100%; height: 100%; object-fit: cover; }
+    .img-upload-info { flex: 1; min-width: 0; }
+    .img-upload-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .img-upload-hint { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+    .img-upload-actions { display: flex; gap: 6px; margin-top: 6px; }
+    .upload-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--green); color: #fff; border: none; border-radius: 6px; padding: 7px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; transition: background 0.2s; }
+    .upload-btn:hover { background: var(--green-mid); }
+    .upload-btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+    .upload-btn.secondary:hover { background: var(--cream-dark); }
+    .upload-btn.danger-btn { background: #fff; color: var(--danger); border: 1px solid #f5c6c6; }
+    .upload-btn.danger-btn:hover { background: #fff0f0; }
+    .url-input-wrap { display: none; margin-top: 8px; }
+    .url-input-wrap.show { display: block; }
+    .url-input-wrap input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: 'Outfit', sans-serif; outline: none; background: #fff; }
+    .url-input-wrap input:focus { border-color: var(--green); }
+    .products-table { width: 100%; border-collapse: collapse; }
+    .products-table th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
+    .products-table td { padding: 12px 14px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .products-table tr:last-child td { border-bottom: none; }
+    .products-table tr:hover td { background: var(--cream); }
+    .badge-pill { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; background: var(--green); color: #fff; }
+    .action-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; font-family: 'Outfit', sans-serif; margin-right: 4px; }
+    .action-btn:hover { background: var(--cream-dark); }
+    .action-btn.danger { color: var(--danger); border-color: #f5c6c6; }
+    .action-btn.danger:hover { background: #fff0f0; }
+    .prod-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); }
+    .prod-thumb-emoji { font-size: 26px; line-height: 1; }
+    .add-product-form { background: var(--cream); border: 1px dashed var(--border); border-radius: 12px; padding: 20px; margin-top: 20px; }
+    .add-product-form h4 { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--green); margin-bottom: 14px; }
+    .mob-header { display: none; background: var(--green); padding: 14px 20px; align-items: center; justify-content: space-between; }
+    .mob-logo { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 700; color: #fff; }
+    .mob-logo em { color: var(--gold-light); font-style: normal; }
+    .mob-menu-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+    .sidebar.mob-open { display: flex !important; position: fixed; inset: 0; z-index: 300; width: 260px; }
+    .mob-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 299; }
+    .mob-overlay.show { display: block; }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .mob-header { display: flex; }
+      .main { padding: 20px 16px; }
+      .form-row { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">Vikas <em>Dairy</em></div>
+    <p class="login-sub">Admin Panel — Secure Login</p>
+    <input type="text" id="loginUser" placeholder="Username" />
+    <input type="password" id="loginPass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="loginError"></div>
+    <p class="login-hint">Default: admin / vikasdairy123</p>
+  </div>
+</div>
+
+<div class="mob-header" id="mobHeader" style="display:none;">
+  <div class="mob-logo">Vikas <em>Dairy</em> Admin</div>
+  <button class="mob-menu-btn" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+</div>
+<div class="mob-overlay" id="mobOverlay" onclick="closeSidebar()"></div>
+
+<div class="admin-layout" id="adminLayout" style="display:none;">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h2>Vikas <em>Dairy</em></h2>
+      <p>Admin Panel</p>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+      <div class="nav-item" onclick="showPage('products')" id="nav-products"><i class="ti ti-milk"></i> Products</div>
+      <div class="nav-item" onclick="showPage('settings')" id="nav-settings"><i class="ti ti-settings"></i> Store Settings</div>
+    </div>
+    <div class="sidebar-footer">
+      <a href="index.html" class="back-link"><i class="ti ti-arrow-left" style="font-size:16px;"></i> View Website</a>
+      <button class="logout-btn" onclick="doLogout()"><i class="ti ti-logout" style="font-size:16px;"></i> Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Welcome back! Here's an overview of Vikas Dairy.</div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-icon"><i class="ti ti-milk"></i></div><div class="stat-val" id="dash-products">8</div><div class="stat-label">Total Products</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="ti ti-star"></i></div><div class="stat-val" id="dash-featured">3</div><div class="stat-label">Badged Items</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="ti ti-clock"></i></div><div class="stat-val">3</div><div class="stat-label">Pickup Slots</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="ti ti-check"></i></div><div class="stat-val">Live</div><div class="stat-label">Website Status</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><i class="ti ti-list" style="font-size:20px;"></i> Product Overview</div>
+        <table class="products-table">
+          <thead><tr><th>Image</th><th>Product</th><th>Price</th><th>Badge</th></tr></thead>
+          <tbody id="dashProductsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="page-products">
+      <div class="page-header">
+        <div class="page-title">Manage Products</div>
+        <div class="page-sub">Add, edit, or remove products shown on your website.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><i class="ti ti-milk" style="font-size:20px;"></i> All Products</div>
+        <table class="products-table">
+          <thead><tr><th>Image</th><th>Name</th><th>Description</th><th>Price</th><th>Unit</th><th>Badge</th><th>Actions</th></tr></thead>
+          <tbody id="productsTableBody"></tbody>
+        </table>
+        <div class="add-product-form">
+          <h4><i class="ti ti-plus" style="font-size:18px;vertical-align:-2px;margin-right:6px;"></i>Add New Product</h4>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>Product Name *</label>
+            <input type="text" id="np-name" placeholder="Full Cream Milk" />
+            <input type="hidden" id="np-emoji" value="🖼️" />
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>Product Image</label>
+            <div class="img-upload-box" id="np-upload-box">
+              <div class="img-upload-inner">
+                <div class="img-thumb-area" id="np-thumb">🥛</div>
+                <div class="img-upload-info">
+                  <div class="img-upload-name" id="np-fname">Koi image select nahi ki</div>
+                  <div class="img-upload-hint">Folder se photo select karo ya URL paste karo</div>
+                  <div class="img-upload-actions">
+                    <label class="upload-btn">
+                      <i class="ti ti-folder-open" style="font-size:14px;"></i> Folder se Chunno
+                      <input type="file" id="np-file" accept="image/*" style="display:none;" onchange="handleFileSelect('np-file','np-thumb','np-fname','np-upload-box','np-img-data','np-emoji')" />
+                    </label>
+                    <button class="upload-btn secondary" onclick="toggleUrlInput('np-url-wrap')"><i class="ti ti-link" style="font-size:14px;"></i> URL</button>
+                    <button class="upload-btn danger-btn" onclick="clearImage('np-thumb','np-fname','np-upload-box','np-img-data','np-url-input','np-url-wrap','np-emoji')"><i class="ti ti-x" style="font-size:13px;"></i></button>
+                  </div>
+                  <div class="url-input-wrap" id="np-url-wrap">
+                    <input type="url" id="np-url-input" placeholder="https://example.com/milk.jpg" oninput="handleUrlInput('np-url-input','np-thumb','np-fname','np-upload-box','np-img-data')" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="np-img-data" value="" />
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Description</label><input type="text" id="np-desc" placeholder="Rich, pure & fresh daily" /></div>
+            <div class="form-group"><label>Price (Rs.) *</label><input type="number" id="np-price" placeholder="60" /></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Unit</label><input type="text" id="np-unit" placeholder="per litre" /></div>
+            <div class="form-group"><label>Badge (optional)</label><input type="text" id="np-badge" placeholder="Best Seller" /></div>
+          </div>
+          <button class="save-btn" onclick="addProduct()"><i class="ti ti-plus"></i> Add Product</button>
+          <span class="success-msg" id="addMsg">Product added!</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">Store Settings</div>
+        <div class="page-sub">Update your contact details, address, and store hours.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><i class="ti ti-building-store" style="font-size:20px;"></i> Contact Information</div>
+        <div class="form-row">
+          <div class="form-group"><label>Phone Number</label><input type="text" id="s-phone" placeholder="+91 98765 43210" /></div>
+          <div class="form-group"><label>WhatsApp Number</label><input type="text" id="s-wa" placeholder="+91 98765 43210" /></div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;"><label>Store Address</label><input type="text" id="s-address" placeholder="123, Main Road, Ahmedabad, Gujarat" /></div>
+        <div class="form-row">
+          <div class="form-group"><label>Working Hours</label><input type="text" id="s-hours" placeholder="6:00 AM – 8:00 PM" /></div>
+          <div class="form-group"><label>Email (optional)</label><input type="text" id="s-email" placeholder="vikasdairy@gmail.com" /></div>
+        </div>
+        <div style="display:flex;align-items:center;margin-top:6px;">
+          <button class="save-btn" onclick="saveSettings()"><i class="ti ti-device-floppy"></i> Save Settings</button>
+          <span class="success-msg" id="settingsMsg">Settings saved!</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><i class="ti ti-clock" style="font-size:20px;"></i> Store Pickup Hours</div>
+        <div class="form-row">
+          <div class="form-group"><label>Morning Slot</label><input type="text" id="s-h1" placeholder="6:00 AM – 10:00 AM" /></div>
+          <div class="form-group"><label>Afternoon Slot</label><input type="text" id="s-h2" placeholder="12:00 PM – 2:00 PM" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Evening Slot</label><input type="text" id="s-h3" placeholder="5:00 PM – 8:00 PM" /></div>
+          <div class="form-group"><label>Sunday Hours</label><input type="text" id="s-h4" placeholder="7:00 AM – 12:00 PM" /></div>
+        </div>
+        <div style="display:flex;align-items:center;margin-top:6px;">
+          <button class="save-btn" onclick="saveHours()"><i class="ti ti-device-floppy"></i> Save Hours</button>
+          <span class="success-msg" id="hoursMsg">Hours saved!</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><i class="ti ti-lock" style="font-size:20px;"></i> Change Admin Password</div>
+        <div class="form-row">
+          <div class="form-group"><label>New Username</label><input type="text" id="s-user" placeholder="admin" /></div>
+          <div class="form-group"><label>New Password</label><input type="password" id="s-pass" placeholder="••••••••" /></div>
+        </div>
+        <div style="display:flex;align-items:center;margin-top:6px;">
+          <button class="save-btn" onclick="saveCreds()"><i class="ti ti-device-floppy"></i> Update Credentials</button>
+          <span class="success-msg" id="credsMsg">Credentials updated!</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:center;justify-content:center;overflow-y:auto;padding:20px;" id="editModal">
+  <div style="background:#fff;border-radius:14px;padding:28px;width:90%;max-width:520px;margin:auto;">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--green);margin-bottom:18px;">Edit Product</h3>
+    <input type="hidden" id="edit-id" />
+    <input type="hidden" id="edit-emoji" value="🖼️" />
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Name</label>
+      <input type="text" id="edit-name" />
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Product Image</label>
+      <div class="img-upload-box" id="edit-upload-box">
+        <div class="img-upload-inner">
+          <div class="img-thumb-area" id="edit-thumb">🥛</div>
+          <div class="img-upload-info">
+            <div class="img-upload-name" id="edit-fname">Koi image select nahi ki</div>
+            <div class="img-upload-hint">Folder se photo select karo ya URL paste karo</div>
+            <div class="img-upload-actions">
+              <label class="upload-btn">
+                <i class="ti ti-folder-open" style="font-size:14px;"></i> Folder se Chunno
+                <input type="file" id="edit-file" accept="image/*" style="display:none;" onchange="handleFileSelect('edit-file','edit-thumb','edit-fname','edit-upload-box','edit-img-data','edit-emoji')" />
+              </label>
+              <button class="upload-btn secondary" onclick="toggleUrlInput('edit-url-wrap')"><i class="ti ti-link" style="font-size:14px;"></i> URL</button>
+              <button class="upload-btn danger-btn" onclick="clearImage('edit-thumb','edit-fname','edit-upload-box','edit-img-data','edit-url-input','edit-url-wrap','edit-emoji')"><i class="ti ti-x" style="font-size:13px;"></i></button>
+            </div>
+            <div class="url-input-wrap" id="edit-url-wrap">
+              <input type="url" id="edit-url-input" placeholder="https://example.com/image.jpg" oninput="handleUrlInput('edit-url-input','edit-thumb','edit-fname','edit-upload-box','edit-img-data')" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="edit-img-data" value="" />
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Description</label><input type="text" id="edit-desc" /></div>
+      <div class="form-group"><label>Price (Rs.)</label><input type="number" id="edit-price" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Unit</label><input type="text" id="edit-unit" /></div>
+      <div class="form-group"><label>Badge</label><input type="text" id="edit-badge" /></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <button class="save-btn" onclick="saveEdit()"><i class="ti ti-check"></i> Save Changes</button>
+      <button class="action-btn" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const DEFAULT_PRODUCTS = [
+    { id:1, name:'Full Cream Milk', desc:'Rich, pure & fresh daily', price:60, unit:'per litre', emoji:'🥛', badge:'Best Seller', image:'' },
+    { id:2, name:'Fresh Curd', desc:'Thick, creamy & probiotic', price:40, unit:'per 500g', emoji:'🍶', badge:'Popular', image:'' },
+    { id:3, name:'Pure Ghee', desc:'Traditionally churned', price:550, unit:'per kg', emoji:'🧈', badge:'Premium', image:'' },
+    { id:4, name:'Ice Cream', desc:'Creamy & indulgent', price:30, unit:'per cup', emoji:'🍦', badge:'', image:'' },
+    { id:5, name:'Badam Shake', desc:'Nutritious almond shake', price:50, unit:'per glass', emoji:'🥤', badge:'New', image:'' },
+    { id:6, name:'Lassi', desc:'Sweet or salted', price:30, unit:'per glass', emoji:'🧃', badge:'Fresh', image:'' },
+    { id:7, name:'Paneer', desc:'Soft & fresh daily', price:80, unit:'per 250g', emoji:'🧀', badge:'', image:'' },
+    { id:8, name:'Butter', desc:'Creamy farm butter', price:60, unit:'per 100g', emoji:'🫙', badge:'', image:'' },
+  ];
+
+  function getProducts() { try { const p=JSON.parse(localStorage.getItem('vikasDairyProducts')||'[]'); return p.length?p:JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)); } catch(e){return JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));} }
+  function saveProducts(p) { localStorage.setItem('vikasDairyProducts', JSON.stringify(p)); }
+  function getSettings() { try { return JSON.parse(localStorage.getItem('vikasDairySettings')||'{}'); } catch(e){return {};} }
+  function saveSettingsObj(s) { localStorage.setItem('vikasDairySettings', JSON.stringify(s)); }
+  function getCreds() { return { user: localStorage.getItem('vdUser')||'admin', pass: localStorage.getItem('vdPass')||'vikasdairy123' }; }
+
+  function handleFileSelect(fileInputId, thumbId, fnameId, boxId, dataId, emojiId) {
+    const file = document.getElementById(fileInputId).files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) { setImagePreview(thumbId, fnameId, boxId, dataId, e.target.result, file.name); };
+    reader.readAsDataURL(file);
+  }
+  function handleUrlInput(urlInputId, thumbId, fnameId, boxId, dataId) {
+    const url = document.getElementById(urlInputId).value.trim();
+    if (!url) return;
+    setImagePreview(thumbId, fnameId, boxId, dataId, url, url.split('/').pop().substring(0,30));
+  }
+  function setImagePreview(thumbId, fnameId, boxId, dataId, src, name) {
+    document.getElementById(thumbId).innerHTML = '<img src="' + src + '" alt="preview" onerror="this.parentElement.innerHTML=\'❌\'" />';
+    document.getElementById(fnameId).textContent = name || 'Image selected';
+    document.getElementById(boxId).classList.add('has-image');
+    document.getElementById(dataId).value = src;
+  }
+  function clearImage(thumbId, fnameId, boxId, dataId, urlInputId, urlWrapId, emojiId) {
+    const emoji = document.getElementById(emojiId) ? document.getElementById(emojiId).value || '🥛' : '🥛';
+    document.getElementById(thumbId).innerHTML = emoji;
+    document.getElementById(fnameId).textContent = 'Koi image select nahi ki';
+    document.getElementById(boxId).classList.remove('has-image');
+    document.getElementById(dataId).value = '';
+    if (urlInputId) document.getElementById(urlInputId).value = '';
+    if (urlWrapId) document.getElementById(urlWrapId).classList.remove('show');
+  }
+  function toggleUrlInput(wrapId) { document.getElementById(wrapId).classList.toggle('show'); }
+  function thumbHTML(p) {
+    if (p.image && p.image.trim()) return '<img src="' + p.image + '" class="prod-thumb" alt="' + p.name + '" onerror="this.outerHTML=\'<span class=prod-thumb-emoji>' + (p.emoji||'🥛') + '</span>\'" />';
+    return '<span class="prod-thumb-emoji">' + (p.emoji||'🥛') + '</span>';
+  }
+
+  function doLogin() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    const c = getCreds();
+    if (u === c.user && p === c.pass) {
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('adminLayout').style.display = 'flex';
+      document.getElementById('mobHeader').style.display = 'flex';
+      initAdmin();
+    } else {
+      document.getElementById('loginError').textContent = 'Invalid username or password.';
+    }
+  }
+  function doLogout() {
+    document.getElementById('adminLayout').style.display = 'none';
+    document.getElementById('mobHeader').style.display = 'none';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+  }
+
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById('page-'+name).classList.add('active');
+    document.getElementById('nav-'+name).classList.add('active');
+    closeSidebar();
+    if (name==='products') renderProductsTable();
+    if (name==='dashboard') renderDashboard();
+    if (name==='settings') loadSettingsForm();
+  }
+
+  function initAdmin() { renderDashboard(); renderProductsTable(); loadSettingsForm(); }
+
+  function renderDashboard() {
+    const prods = getProducts();
+    document.getElementById('dash-products').textContent = prods.length;
+    document.getElementById('dash-featured').textContent = prods.filter(p=>p.badge).length;
+    document.getElementById('dashProductsTable').innerHTML = prods.map(p=>
+      '<tr><td>' + thumbHTML(p) + '</td><td style="font-weight:500;">' + p.name + '</td>' +
+      '<td style="font-weight:500;color:var(--gold);">&#8377;' + p.price + '</td>' +
+      '<td>' + (p.badge ? '<span class="badge-pill">'+p.badge+'</span>' : '<span style="color:#ccc;">—</span>') + '</td></tr>'
+    ).join('');
+  }
+
+  function renderProductsTable() {
+    const prods = getProducts();
+    document.getElementById('productsTableBody').innerHTML = prods.map(p=>
+      '<tr><td>' + thumbHTML(p) + '</td>' +
+      '<td style="font-weight:500;">' + p.name + '</td>' +
+      '<td style="color:var(--text-light);font-size:13px;">' + p.desc + '</td>' +
+      '<td style="font-weight:600;color:var(--gold);">&#8377;' + p.price + '</td>' +
+      '<td style="color:var(--text-light);">' + p.unit + '</td>' +
+      '<td>' + (p.badge ? '<span class="badge-pill">'+p.badge+'</span>' : '—') + '</td>' +
+      '<td><button class="action-btn" onclick="openEdit('+p.id+')"><i class="ti ti-edit" style="font-size:13px;"></i> Edit</button>' +
+      '<button class="action-btn danger" onclick="deleteProduct('+p.id+')"><i class="ti ti-trash" style="font-size:13px;"></i></button></td></tr>'
+    ).join('');
+  }
+
+  function addProduct() {
+    const emoji = document.getElementById('np-emoji').value.trim() || '🥛';
+    const name = document.getElementById('np-name').value.trim();
+    const desc = document.getElementById('np-desc').value.trim();
+    const price = parseInt(document.getElementById('np-price').value) || 0;
+    const unit = document.getElementById('np-unit').value.trim();
+    const badge = document.getElementById('np-badge').value.trim();
+    const image = document.getElementById('np-img-data').value;
+    if (!name || !price) { alert('Product name aur price daalo.'); return; }
+    const prods = getProducts();
+    const newId = Math.max(0, ...prods.map(p=>p.id)) + 1;
+    prods.push({ id:newId, name, desc, price, unit, emoji, badge, image });
+    saveProducts(prods);
+    ['np-name','np-desc','np-price','np-unit','np-badge'].forEach(id=>document.getElementById(id).value='');
+    clearImage('np-thumb','np-fname','np-upload-box','np-img-data','np-url-input','np-url-wrap','np-emoji');
+    renderProductsTable(); renderDashboard();
+    showMsg('addMsg');
+  }
+
+  function deleteProduct(id) {
+    if (!confirm('Is product ko delete karna hai?')) return;
+    saveProducts(getProducts().filter(p=>p.id!==id));
+    renderProductsTable(); renderDashboard();
+  }
+
+  function openEdit(id) {
+    const p = getProducts().find(x=>x.id===id);
+    if (!p) return;
+    document.getElementById('edit-id').value = p.id;
+    document.getElementById('edit-emoji').value = p.emoji;
+    document.getElementById('edit-name').value = p.name;
+    document.getElementById('edit-desc').value = p.desc;
+    document.getElementById('edit-price').value = p.price;
+    document.getElementById('edit-unit').value = p.unit;
+    document.getElementById('edit-badge').value = p.badge;
+    document.getElementById('edit-img-data').value = p.image || '';
+    document.getElementById('edit-url-input').value = '';
+    document.getElementById('edit-url-wrap').classList.remove('show');
+    if (p.image) {
+      setImagePreview('edit-thumb','edit-fname','edit-upload-box','edit-img-data', p.image, 'Saved image');
+    } else {
+      clearImage('edit-thumb','edit-fname','edit-upload-box','edit-img-data','edit-url-input','edit-url-wrap','edit-emoji');
+      document.getElementById('edit-thumb').innerHTML = p.emoji || '🥛';
+    }
+    document.getElementById('editModal').style.display = 'flex';
+  }
+  function closeEdit() { document.getElementById('editModal').style.display = 'none'; }
+  function saveEdit() {
+    const id = parseInt(document.getElementById('edit-id').value);
+    const prods = getProducts();
+    const idx = prods.findIndex(p=>p.id===id);
+    if (idx===-1) return;
+    prods[idx] = {
+      id,
+      emoji: document.getElementById('edit-emoji').value.trim(),
+      name: document.getElementById('edit-name').value.trim(),
+      desc: document.getElementById('edit-desc').value.trim(),
+      price: parseInt(document.getElementById('edit-price').value)||0,
+      unit: document.getElementById('edit-unit').value.trim(),
+      badge: document.getElementById('edit-badge').value.trim(),
+      image: document.getElementById('edit-img-data').value
+    };
+    saveProducts(prods);
+    closeEdit(); renderProductsTable(); renderDashboard();
+  }
+
+  function loadSettingsForm() {
+    const s = getSettings();
+    document.getElementById('s-phone').value = s.phone||'';
+    document.getElementById('s-wa').value = s.whatsapp||'';
+    document.getElementById('s-address').value = s.address||'';
+    document.getElementById('s-hours').value = s.hours||'';
+    document.getElementById('s-email').value = s.email||'';
+    document.getElementById('s-h1').value = s.h1||'6:00 AM – 10:00 AM';
+    document.getElementById('s-h2').value = s.h2||'12:00 PM – 2:00 PM';
+    document.getElementById('s-h3').value = s.h3||'5:00 PM – 8:00 PM';
+    document.getElementById('s-h4').value = s.h4||'7:00 AM – 12:00 PM';
+    document.getElementById('s-user').value = getCreds().user;
+  }
+  function saveSettings() {
+    const s = getSettings();
+    s.phone = document.getElementById('s-phone').value.trim();
+    s.whatsapp = document.getElementById('s-wa').value.trim();
+    s.address = document.getElementById('s-address').value.trim();
+    s.hours = document.getElementById('s-hours').value.trim();
+    s.email = document.getElementById('s-email').value.trim();
+    saveSettingsObj(s); showMsg('settingsMsg');
+  }
+  function saveHours() {
+    const s = getSettings();
+    s.h1 = document.getElementById('s-h1').value.trim();
+    s.h2 = document.getElementById('s-h2').value.trim();
+    s.h3 = document.getElementById('s-h3').value.trim();
+    s.h4 = document.getElementById('s-h4').value.trim();
+    saveSettingsObj(s); showMsg('hoursMsg');
+  }
+  function saveCreds() {
+    const u = document.getElementById('s-user').value.trim();
+    const p = document.getElementById('s-pass').value;
+    if (!u) { alert('Username empty nahi ho sakta.'); return; }
+    if (u) localStorage.setItem('vdUser', u);
+    if (p) localStorage.setItem('vdPass', p);
+    document.getElementById('s-pass').value = '';
+    showMsg('credsMsg');
+  }
+  function showMsg(id) {
+    const el = document.getElementById(id);
+    el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), 2500);
+  }
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('mob-open');
+    document.getElementById('mobOverlay').classList.toggle('show');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('mob-open');
+    document.getElementById('mobOverlay').classList.remove('show');
+  }
+</script>
+</body>
+</html>
