@@ -500,7 +500,13 @@
     // Listen to products
     onValue(productsRef, (snap) => {
       const data = snap.val();
-      products = data ? (Array.isArray(data) ? data : Object.values(data)) : defaultProducts;
+      if (data) {
+        // FIX: Array ho ya object — dono handle karo, aur null slots filter karo
+        const arr = Array.isArray(data) ? data : Object.values(data);
+        products = arr.filter(Boolean);
+      } else {
+        products = defaultProducts;
+      }
 
       // FIX 2: Cart mein stored products ko updated prices se sync karo
       cart = cart.filter(ci => products.find(p => p.id === ci.id));
