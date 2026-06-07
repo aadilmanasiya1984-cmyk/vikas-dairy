@@ -541,15 +541,10 @@
   onValue(ref(db, 'products'), (snap) => {
     const data = snap.val();
     if (data) {
-      // Firebase key (_fbKey) har product ke saath store karo taaki delete easy ho
-      // _key field jo galat save hui thi usse ignore karo
-      if (Array.isArray(data)) {
-        cachedProducts = data.filter(Boolean).map((p, i) => ({ ...p, _fbKey: String(i), _key: undefined }));
-      } else {
-        cachedProducts = Object.entries(data)
-          .filter(([, v]) => v)
-          .map(([k, v]) => ({ ...v, _fbKey: k, _key: undefined }));
-      }
+      // ALWAYS Object.entries use karo — Firebase actual key milegi (1,2,3...)
+      // Array.isArray kabhi bhi use mat karo — index aur Firebase key alag hote hain
+      const entries = Object.entries(data).filter(([, v]) => v);
+      cachedProducts = entries.map(([k, v]) => ({ ...v, _fbKey: k, _key: undefined }));
     } else {
       cachedProducts = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)).map(p => ({ ...p, _fbKey: String(p.id) }));
     }
