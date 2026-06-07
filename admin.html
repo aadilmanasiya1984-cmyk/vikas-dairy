@@ -199,7 +199,7 @@
     <p id="confirmMsg">Are you sure?</p>
     <div class="confirm-btns">
       <button class="confirm-yes" id="confirmYes">Haan, karo</button>
-      <button class="confirm-no" onclick="closeConfirm()">Cancel</button>
+      <button class="confirm-no" onclick="window.closeConfirm()">Cancel</button>
     </div>
   </div>
 </div>
@@ -681,8 +681,7 @@
   };
 
   window.deleteProduct = function(id) {
-    showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wापस nahi aayega.', () => {
-      // FIX: Number() se compare karo — kabhi id string hoti hai kabhi number
+    window.showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wापस nahi aayega.', () => {
       const updated = getProducts().filter(p => Number(p.id) !== Number(id));
       saveProducts(updated);
     });
@@ -784,15 +783,14 @@
     update(ref(db, 'orders/' + key), { status });
   };
 
-  // FIX: Custom confirm instead of browser confirm()
   window.deleteOrder = function(key) {
-    showConfirm('Order Delete', 'Is order ko delete karna hai?', () => {
+    window.showConfirm('Order Delete', 'Is order ko delete karna hai?', () => {
       remove(ref(db, 'orders/' + key));
     });
   };
 
   window.clearAllOrders = function() {
-    showConfirm('Saare Orders Delete', 'Saare orders delete ho jaenge. Ye undo nahi ho sakta!', () => {
+    window.showConfirm('Saare Orders Delete', 'Saare orders delete ho jaenge. Ye undo nahi ho sakta!', () => {
       set(ref(db, 'orders'), null);
     });
   };
@@ -954,22 +952,22 @@
 </script>
 
 <script>
-  // FIX: Custom confirm dialog
+  // FIXED: window pe assign karo taaki ES module script bhi access kar sake
   let _confirmCallback = null;
-  function showConfirm(title, msg, callback) {
+  window.showConfirm = function(title, msg, callback) {
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMsg').textContent = msg;
     _confirmCallback = callback;
     document.getElementById('confirmOverlay').classList.add('show');
     document.getElementById('confirmYes').onclick = function() {
-      closeConfirm();
+      window.closeConfirm();
       if (_confirmCallback) _confirmCallback();
     };
-  }
-  function closeConfirm() {
+  };
+  window.closeConfirm = function() {
     document.getElementById('confirmOverlay').classList.remove('show');
     _confirmCallback = null;
-  }
+  };
 
   function thumbHTML(p) {
     if (p.image && p.image.trim()) {
