@@ -540,7 +540,13 @@
 
   onValue(ref(db, 'products'), (snap) => {
     const data = snap.val();
-    cachedProducts = data ? (Array.isArray(data) ? data : Object.values(data)) : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+    if (data) {
+      // FIX: Array ho ya object — dono handle karo, aur null slots filter karo
+      const arr = Array.isArray(data) ? data : Object.values(data);
+      cachedProducts = arr.filter(Boolean);
+    } else {
+      cachedProducts = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+    }
     if (document.getElementById('adminLayout').style.display !== 'none') {
       renderDashboard(); renderProductsTable();
     }
@@ -560,7 +566,13 @@
   });
 
   function getProducts() { return cachedProducts.length ? cachedProducts : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)); }
-  function saveProducts(p) { set(ref(db, 'products'), p); }
+  // FIX: Array ki jagah object {id: product} format mein save karo
+  // Isse Firebase mein id aur position ka mismatch nahi hoga
+  function saveProducts(p) {
+    const obj = {};
+    p.forEach(prod => { obj[prod.id] = prod; });
+    set(ref(db, 'products'), obj);
+  }
   function saveSettingsObj(s) { set(ref(db, 'settings'), s); }
   function getSettings() { return window._cachedSettings || {}; }
 
@@ -670,7 +682,9 @@
 
   window.deleteProduct = function(id) {
     showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wापस nahi aayega.', () => {
-      saveProducts(getProducts().filter(p=>p.id!==id));
+      // FIX: Number() se compare karo — kabhi id string hoti hai kabhi number
+      const updated = getProducts().filter(p => Number(p.id) !== Number(id));
+      saveProducts(updated);
     });
   };
 
