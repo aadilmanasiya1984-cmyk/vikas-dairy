@@ -675,9 +675,18 @@
 
   window.deleteProduct = function(id) {
     id = Number(id);
-    showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wapas nahi aayega.', () => {
-      saveProducts(getProducts().filter(p => Number(p.id) !== id));
-    });
+    const doDelete = () => {
+      // Direct Firebase remove — sabse reliable tarika
+      remove(ref(db, 'products/' + id)).catch(() => {
+        // Fallback: filter aur overwrite
+        saveProducts(getProducts().filter(p => Number(p.id) !== id));
+      });
+    };
+    if (typeof showConfirm === 'function') {
+      showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wapas nahi aayega.', doDelete);
+    } else if (window.confirm('Is product ko delete karna hai?')) {
+      doDelete();
+    }
   };
 
   window.openEdit = function(id) {
@@ -949,7 +958,7 @@
 <script>
   // FIX: Custom confirm dialog
   let _confirmCallback = null;
-  function showConfirm(title, msg, callback) {
+  window.showConfirm = function showConfirm(title, msg, callback) {
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMsg').textContent = msg;
     _confirmCallback = callback;
