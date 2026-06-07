@@ -541,11 +541,17 @@
   onValue(ref(db, 'products'), (snap) => {
     const data = snap.val();
     if (data) {
-      // FIX: Array ho ya object — dono handle karo, aur null slots filter karo
-      const arr = Array.isArray(data) ? data : Object.values(data);
-      cachedProducts = arr.filter(Boolean);
+      // Firebase key (_fbKey) har product ke saath store karo taaki delete easy ho
+      // _key field jo galat save hui thi usse ignore karo
+      if (Array.isArray(data)) {
+        cachedProducts = data.filter(Boolean).map((p, i) => ({ ...p, _fbKey: String(i), _key: undefined }));
+      } else {
+        cachedProducts = Object.entries(data)
+          .filter(([, v]) => v)
+          .map(([k, v]) => ({ ...v, _fbKey: k, _key: undefined }));
+      }
     } else {
-      cachedProducts = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+      cachedProducts = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)).map(p => ({ ...p, _fbKey: String(p.id) }));
     }
     if (document.getElementById('adminLayout').style.display !== 'none') {
       renderDashboard(); renderProductsTable();
@@ -570,7 +576,11 @@
   // Isse Firebase mein id aur position ka mismatch nahi hoga
   function saveProducts(p) {
     const obj = {};
-    p.forEach(prod => { obj[prod.id] = prod; });
+    p.forEach(prod => {
+      // _fbKey aur _key Firebase mein save NAHI karna
+      const { _fbKey, _key, ...cleanProd } = prod;
+      obj[cleanProd.id] = cleanProd;
+    });
     set(ref(db, 'products'), obj);
   }
   function saveSettingsObj(s) { set(ref(db, 'settings'), s); }
@@ -681,9 +691,17 @@
   };
 
   window.deleteProduct = function(id) {
-    window.showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wापस nahi aayega.', () => {
-      const updated = getProducts().filter(p => Number(p.id) !== Number(id));
-      saveProducts(updated);
+    window.showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wapas nahi aayega.', () => {
+      // Seedha Firebase key se remove karo — sabse reliable tarika
+      const product = getProducts().find(p => Number(p.id) === Number(id));
+      if (product && product._fbKey) {
+        // Method 1: Direct Firebase key se delete
+        remove(ref(db, 'products/' + product._fbKey));
+      } else {
+        // Method 2: Fallback — poori list filter karke dobara save karo
+        const updated = getProducts().filter(p => Number(p.id) !== Number(id));
+        saveProducts(updated);
+      }
     });
   };
 
@@ -714,20 +732,27 @@
   window.saveEdit = function() {
     const id = parseInt(document.getElementById('edit-id').value);
     const prods = getProducts();
-    const idx = prods.findIndex(p=>p.id===id);
-    if (idx===-1) return;
-    prods[idx] = {
+    const idx = prods.findIndex(p => p.id === id);
+    if (idx === -1) return;
+    const fbKey = prods[idx]._fbKey;
+    const updated = {
       id,
       emoji: document.getElementById('edit-emoji').value.trim() || '🥛',
       name: document.getElementById('edit-name').value.trim(),
       desc: document.getElementById('edit-desc').value.trim(),
-      price: parseInt(document.getElementById('edit-price').value)||0,
+      price: parseInt(document.getElementById('edit-price').value) || 0,
       unit: document.getElementById('edit-unit').value.trim(),
       category: document.getElementById('edit-category').value.trim(),
       badge: document.getElementById('edit-badge').value.trim(),
       image: document.getElementById('edit-img-data').value
     };
-    saveProducts(prods);
+    // Seedha Firebase key pe update karo
+    if (fbKey) {
+      set(ref(db, 'products/' + fbKey), updated);
+    } else {
+      prods[idx] = updated;
+      saveProducts(prods);
+    }
     closeEdit();
     showMsg('addMsg');
   };
