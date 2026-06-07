@@ -560,7 +560,12 @@
   });
 
   function getProducts() { return cachedProducts.length ? cachedProducts : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)); }
-  function saveProducts(p) { set(ref(db, 'products'), p); }
+  function saveProducts(p) {
+    // Save as object keyed by product id to avoid Firebase array reindexing
+    const obj = {};
+    p.forEach(prod => { obj[prod.id] = prod; });
+    set(ref(db, 'products'), obj);
+  }
   function saveSettingsObj(s) { set(ref(db, 'settings'), s); }
   function getSettings() { return window._cachedSettings || {}; }
 
