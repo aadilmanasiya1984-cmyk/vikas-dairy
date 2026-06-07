@@ -650,7 +650,7 @@
     const price = parseInt(document.getElementById('np-price').value) || 0;
     if (!name || !price) { alert('Product name aur price daalo.'); return; }
     const prods = getProducts();
-    const newId = Math.max(0, ...prods.map(p=>p.id)) + 1;
+    const newId = Math.max(0, ...prods.map(p => Number(p.id))) + 1;
     prods.push({
       id: newId,
       name,
@@ -669,13 +669,15 @@
   };
 
   window.deleteProduct = function(id) {
-    showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wापस nahi aayega.', () => {
-      saveProducts(getProducts().filter(p=>p.id!==id));
+    id = Number(id);
+    showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wapas nahi aayega.', () => {
+      saveProducts(getProducts().filter(p => Number(p.id) !== id));
     });
   };
 
   window.openEdit = function(id) {
-    const p = getProducts().find(x=>x.id===id);
+    id = Number(id);
+    const p = getProducts().find(x => Number(x.id) === id);
     if (!p) return;
     document.getElementById('edit-id').value = p.id;
     document.getElementById('edit-emoji').value = p.emoji || '🥛';
@@ -699,9 +701,9 @@
   window.closeEdit = function() { document.getElementById('editModal').style.display = 'none'; };
 
   window.saveEdit = function() {
-    const id = parseInt(document.getElementById('edit-id').value);
+    const id = Number(document.getElementById('edit-id').value);
     const prods = getProducts();
-    const idx = prods.findIndex(p=>p.id===id);
+    const idx = prods.findIndex(p => Number(p.id) === id);
     if (idx===-1) return;
     prods[idx] = {
       id,
