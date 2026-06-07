@@ -540,7 +540,20 @@
 
   onValue(ref(db, 'products'), (snap) => {
     const data = snap.val();
-    cachedProducts = data ? (Array.isArray(data) ? data : Object.values(data)) : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+    if (data) {
+      if (Array.isArray(data)) {
+        // Array format (old seed) - use index as key, fix to object format
+        const obj = {};
+        data.forEach((p, i) => { if (p) obj[p.id || i] = {...p, _key: String(p.id || i)}; });
+        set(ref(db, 'products'), obj); // Re-save as keyed object
+        cachedProducts = Object.values(obj);
+      } else {
+        // Object format - attach firebase key to each product
+        cachedProducts = Object.entries(data).map(([k, p]) => ({...p, _key: k}));
+      }
+    } else {
+      cachedProducts = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)).map(p => ({...p, _key: String(p.id)}));
+    }
     if (document.getElementById('adminLayout').style.display !== 'none') {
       renderDashboard(); renderProductsTable();
     }
@@ -561,9 +574,12 @@
 
   function getProducts() { return cachedProducts.length ? cachedProducts : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)); }
   function saveProducts(p) {
-    // Save as object keyed by product id to avoid Firebase array reindexing
     const obj = {};
-    p.forEach(prod => { obj[prod.id] = prod; });
+    p.forEach(prod => {
+      const key = prod._key || String(prod.id);
+      const { _key, ...cleanProd } = prod; // remove _key before saving
+      obj[key] = cleanProd;
+    });
     set(ref(db, 'products'), obj);
   }
   function saveSettingsObj(s) { set(ref(db, 'settings'), s); }
@@ -658,6 +674,7 @@
     const newId = Math.max(0, ...prods.map(p => Number(p.id))) + 1;
     prods.push({
       id: newId,
+      _key: String(newId), // Firebase key = product id for new products
       name,
       desc: document.getElementById('np-desc').value.trim(),
       price,
@@ -675,15 +692,18 @@
 
   window.deleteProduct = function(id) {
     id = Number(id);
+    const product = getProducts().find(p => Number(p.id) === id);
     const doDelete = () => {
-      // Direct Firebase remove — sabse reliable tarika
-      remove(ref(db, 'products/' + id)).catch(() => {
-        // Fallback: filter aur overwrite
+      if (product && product._key) {
+        // Use the actual Firebase key for deletion
+        remove(ref(db, 'products/' + product._key));
+      } else {
+        // Fallback: rewrite entire products object
         saveProducts(getProducts().filter(p => Number(p.id) !== id));
-      });
+      }
     };
-    if (typeof showConfirm === 'function') {
-      showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wapas nahi aayega.', doDelete);
+    if (typeof window.showConfirm === 'function') {
+      window.showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wapas nahi aayega.', doDelete);
     } else if (window.confirm('Is product ko delete karna hai?')) {
       doDelete();
     }
@@ -721,6 +741,7 @@
     if (idx===-1) return;
     prods[idx] = {
       id,
+      _key: prods[idx]._key || String(id), // preserve Firebase key
       emoji: document.getElementById('edit-emoji').value.trim() || '🥛',
       name: document.getElementById('edit-name').value.trim(),
       desc: document.getElementById('edit-desc').value.trim(),
