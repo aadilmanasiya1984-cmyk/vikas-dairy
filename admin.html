@@ -502,7 +502,7 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set, get, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getDatabase, ref, onValue, set, get, remove, update, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBWw068HieZNTGOK0Z3Sah3cqQSNZfolV4",
@@ -528,40 +528,64 @@
     { id:8, name:'Butter', desc:'Creamy farm butter', price:60, unit:'per 100g', emoji:'🫙', badge:'', image:'', category:'Ghee & Butter' },
   ];
 
+  // ── STATE ──
   let cachedProducts = [];
   let cachedOrders = {};
   let orderFilter = 'all';
 
-  async function getCreds() {
-    const snap = await get(ref(db, 'adminCreds'));
-    const d = snap.val();
-    return { user: (d && d.user) || 'admin', pass: (d && d.pass) || 'vikasdairy123' };
+  // ── HELPERS ──
+  // Normalize any Firebase data into a clean array with _fbKey on each item
+  function normalizeProducts(data) {
+    if (!data) return DEFAULT_PRODUCTS.map(p => ({...p, _fbKey: 'p_' + p.id}));
+    let entries = [];
+    if (Array.isArray(data)) {
+      // Old array format — convert keys are 0,1,2...
+      entries = data.map((p, i) => [String(i), p]).filter(([,p]) => p);
+    } else {
+      entries = Object.entries(data);
+    }
+    return entries.map(([k, p]) => ({...p, _fbKey: k}));
   }
 
+  // Save products to Firebase — always as object keyed by _fbKey
+  function saveProducts(arr) {
+    const obj = {};
+    arr.forEach(p => {
+      const key = p._fbKey || ('p_' + p.id);
+      const { _fbKey, ...clean } = p;
+      obj[key] = clean;
+    });
+    set(ref(db, 'products'), obj);
+  }
+
+  function getProducts() { return cachedProducts; }
+  function saveSettingsObj(s) { set(ref(db, 'settings'), s); }
+  function getSettings() { return window._cachedSettings || {}; }
+
+  function getOrdersArray() {
+    return Object.entries(cachedOrders)
+      .map(([key, val]) => ({ _key: key, ...val }))
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+  }
+
+  // ── FIREBASE LISTENERS ──
   onValue(ref(db, 'products'), (snap) => {
-    const data = snap.val();
-    if (data) {
-      if (Array.isArray(data)) {
-        // Array format (old seed) - use index as key, fix to object format
-        const obj = {};
-        data.forEach((p, i) => { if (p) obj[p.id || i] = {...p, _key: String(p.id || i)}; });
-        set(ref(db, 'products'), obj); // Re-save as keyed object
-        cachedProducts = Object.values(obj);
-      } else {
-        // Object format - attach firebase key to each product
-        cachedProducts = Object.entries(data).map(([k, p]) => ({...p, _key: k}));
-      }
-    } else {
-      cachedProducts = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)).map(p => ({...p, _key: String(p.id)}));
+    const raw = snap.val();
+    cachedProducts = normalizeProducts(raw);
+
+    // If data was in old array format, re-save as object immediately
+    if (raw && Array.isArray(raw)) {
+      saveProducts(cachedProducts);
     }
+
     if (document.getElementById('adminLayout').style.display !== 'none') {
-      renderDashboard(); renderProductsTable();
+      renderDashboard();
+      renderProductsTable();
     }
   });
 
   onValue(ref(db, 'orders'), (snap) => {
-    const data = snap.val();
-    cachedOrders = data || {};
+    cachedOrders = snap.val() || {};
     if (document.getElementById('adminLayout').style.display !== 'none') {
       updateOrderBadge(); renderOrders(); renderDashboard();
     }
@@ -572,21 +596,10 @@
     if (document.getElementById('adminLayout').style.display !== 'none') loadSettingsForm();
   });
 
-  function getProducts() { return cachedProducts.length ? cachedProducts : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)); }
-  function saveProducts(p) {
-    const obj = {};
-    p.forEach(prod => {
-      const key = prod._key || String(prod.id);
-      const { _key, ...cleanProd } = prod; // remove _key before saving
-      obj[key] = cleanProd;
-    });
-    set(ref(db, 'products'), obj);
-  }
-  function saveSettingsObj(s) { set(ref(db, 'settings'), s); }
-  function getSettings() { return window._cachedSettings || {}; }
-
-  function getOrdersArray() {
-    return Object.entries(cachedOrders).map(([key, val]) => ({ _key: key, ...val })).sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+  async function getCreds() {
+    const snap = await get(ref(db, 'adminCreds'));
+    const d = snap.val();
+    return { user: (d && d.user) || 'admin', pass: (d && d.pass) || 'vikasdairy123' };
   }
 
   function updateOrderBadge() {
@@ -623,15 +636,15 @@
   window.renderDashboard = function() {
     const prods = getProducts();
     const orders = getOrdersArray();
-    const revenue = orders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+(o.total||0),0);
+    const revenue = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0);
     document.getElementById('dash-products').textContent = prods.length;
-    document.getElementById('dash-featured').textContent = prods.filter(p=>p.badge).length;
+    document.getElementById('dash-featured').textContent = prods.filter(p => p.badge).length;
     document.getElementById('dash-orders').textContent = orders.length;
     document.getElementById('dash-revenue').textContent = '₹' + revenue;
-    document.getElementById('dashProductsTable').innerHTML = prods.map(p=>
+    document.getElementById('dashProductsTable').innerHTML = prods.map(p =>
       '<tr><td>' + thumbHTML(p) + '</td><td style="font-weight:500;">' + p.name + '</td>' +
       '<td style="font-weight:500;color:var(--gold);">&#8377;' + p.price + '</td>' +
-      '<td>' + (p.badge ? '<span class="badge-pill">'+p.badge+'</span>' : '<span style="color:#ccc;">—</span>') + '</td></tr>'
+      '<td>' + (p.badge ? '<span class="badge-pill">' + p.badge + '</span>' : '<span style="color:#ccc;">—</span>') + '</td></tr>'
     ).join('');
     const recent = orders.slice(0, 5);
     if (!recent.length) {
@@ -642,27 +655,29 @@
   };
 
   function recentOrderHTML(o) {
-    const dt = o.timestamp ? new Date(o.timestamp).toLocaleString('en-IN', { dateStyle:'short', timeStyle:'short' }) : '—';
+    const dt = o.timestamp ? new Date(o.timestamp).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) : '—';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
-      '<div><span style="font-weight:600;">' + (o.customerName||'Guest') + '</span> <span style="color:var(--text-light);margin-left:6px;">' + dt + '</span></div>' +
+      '<div><span style="font-weight:600;">' + (o.customerName || 'Guest') + '</span> <span style="color:var(--text-light);margin-left:6px;">' + dt + '</span></div>' +
       '<div style="display:flex;align-items:center;gap:8px;">' +
-      '<span style="font-weight:700;color:var(--gold);">₹' + (o.total||0) + '</span>' +
+      '<span style="font-weight:700;color:var(--gold);">₹' + (o.total || 0) + '</span>' +
       statusPill(o.status) + '</div></div>';
   }
 
   // ── PRODUCTS ──
   window.renderProductsTable = function() {
     const prods = getProducts();
-    document.getElementById('productsTableBody').innerHTML = prods.map(p=>
+    document.getElementById('productsTableBody').innerHTML = prods.map(p =>
       '<tr><td>' + thumbHTML(p) + '</td>' +
       '<td style="font-weight:500;">' + p.name + '</td>' +
-      '<td style="color:var(--text-light);font-size:13px;">' + (p.desc||'') + '</td>' +
+      '<td style="color:var(--text-light);font-size:13px;">' + (p.desc || '') + '</td>' +
       '<td style="font-weight:600;color:var(--gold);">&#8377;' + p.price + '</td>' +
-      '<td style="color:var(--text-light);">' + (p.unit||'') + '</td>' +
-      '<td style="color:var(--text-light);font-size:12px;">' + (p.category||'—') + '</td>' +
-      '<td>' + (p.badge ? '<span class="badge-pill">'+p.badge+'</span>' : '—') + '</td>' +
-      '<td><button class="action-btn" onclick="openEdit('+p.id+')"><i class="ti ti-edit" style="font-size:13px;"></i> Edit</button>' +
-      '<button class="action-btn danger" onclick="deleteProduct('+p.id+')"><i class="ti ti-trash" style="font-size:13px;"></i></button></td></tr>'
+      '<td style="color:var(--text-light);">' + (p.unit || '') + '</td>' +
+      '<td style="color:var(--text-light);font-size:12px;">' + (p.category || '—') + '</td>' +
+      '<td>' + (p.badge ? '<span class="badge-pill">' + p.badge + '</span>' : '—') + '</td>' +
+      '<td>' +
+      '<button class="action-btn" onclick='window.openEdit("' + p._fbKey + '")' ><i class="ti ti-edit" style="font-size:13px;"></i> Edit</button>' +
+      '<button class="action-btn danger" onclick='window.deleteProduct("' + p._fbKey + '")' ><i class="ti ti-trash" style="font-size:13px;"></i></button>' +
+      '</td></tr>'
     ).join('');
   };
 
@@ -671,10 +686,10 @@
     const price = parseInt(document.getElementById('np-price').value) || 0;
     if (!name || !price) { alert('Product name aur price daalo.'); return; }
     const prods = getProducts();
-    const newId = Math.max(0, ...prods.map(p => Number(p.id))) + 1;
-    prods.push({
-      id: newId,
-      _key: String(newId), // Firebase key = product id for new products
+    const maxId = Math.max(0, ...prods.map(p => Number(p.id) || 0)) + 1;
+    const newKey = 'p_' + maxId;
+    const newProd = {
+      id: maxId,
       name,
       desc: document.getElementById('np-desc').value.trim(),
       price,
@@ -683,37 +698,26 @@
       emoji: document.getElementById('np-emoji').value.trim() || '🥛',
       badge: document.getElementById('np-badge').value.trim(),
       image: document.getElementById('np-img-data').value
-    });
-    saveProducts(prods);
-    ['np-name','np-desc','np-price','np-unit','np-category','np-badge'].forEach(id=>document.getElementById(id).value='');
-    clearImage('np-thumb','np-fname','np-upload-box','np-img-data','np-url-input','np-url-wrap','np-emoji');
+    };
+    // Save directly to Firebase with explicit key
+    set(ref(db, 'products/' + newKey), newProd);
+    ['np-name', 'np-desc', 'np-price', 'np-unit', 'np-category', 'np-badge'].forEach(id => document.getElementById(id).value = '');
+    clearImage('np-thumb', 'np-fname', 'np-upload-box', 'np-img-data', 'np-url-input', 'np-url-wrap', 'np-emoji');
     showMsg('addMsg');
   };
 
-  window.deleteProduct = function(id) {
-    id = Number(id);
-    const product = getProducts().find(p => Number(p.id) === id);
-    const doDelete = () => {
-      if (product && product._key) {
-        // Use the actual Firebase key for deletion
-        remove(ref(db, 'products/' + product._key));
-      } else {
-        // Fallback: rewrite entire products object
-        saveProducts(getProducts().filter(p => Number(p.id) !== id));
-      }
-    };
-    if (typeof window.showConfirm === 'function') {
-      window.showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wapas nahi aayega.', doDelete);
-    } else if (window.confirm('Is product ko delete karna hai?')) {
-      doDelete();
-    }
+  // DELETE — uses _fbKey directly, no ID matching needed
+  window.deleteProduct = function(fbKey) {
+    window.showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wapas nahi aayega.', function() {
+      remove(ref(db, 'products/' + fbKey));
+    });
   };
 
-  window.openEdit = function(id) {
-    id = Number(id);
-    const p = getProducts().find(x => Number(x.id) === id);
+  // EDIT — pass _fbKey
+  window.openEdit = function(fbKey) {
+    const p = getProducts().find(x => x._fbKey === fbKey);
     if (!p) return;
-    document.getElementById('edit-id').value = p.id;
+    document.getElementById('edit-id').value = fbKey;
     document.getElementById('edit-emoji').value = p.emoji || '🥛';
     document.getElementById('edit-name').value = p.name;
     document.getElementById('edit-desc').value = p.desc || '';
@@ -725,33 +729,32 @@
     document.getElementById('edit-url-input').value = '';
     document.getElementById('edit-url-wrap').classList.remove('show');
     if (p.image) {
-      setImagePreview('edit-thumb','edit-fname','edit-upload-box','edit-img-data', p.image, 'Saved image');
+      setImagePreview('edit-thumb', 'edit-fname', 'edit-upload-box', 'edit-img-data', p.image, 'Saved image');
     } else {
-      clearImage('edit-thumb','edit-fname','edit-upload-box','edit-img-data','edit-url-input','edit-url-wrap','edit-emoji');
+      clearImage('edit-thumb', 'edit-fname', 'edit-upload-box', 'edit-img-data', 'edit-url-input', 'edit-url-wrap', 'edit-emoji');
       document.getElementById('edit-thumb').innerHTML = p.emoji || '🥛';
     }
     document.getElementById('editModal').style.display = 'flex';
   };
+
   window.closeEdit = function() { document.getElementById('editModal').style.display = 'none'; };
 
   window.saveEdit = function() {
-    const id = Number(document.getElementById('edit-id').value);
-    const prods = getProducts();
-    const idx = prods.findIndex(p => Number(p.id) === id);
-    if (idx===-1) return;
-    prods[idx] = {
-      id,
-      _key: prods[idx]._key || String(id), // preserve Firebase key
+    const fbKey = document.getElementById('edit-id').value;
+    const p = getProducts().find(x => x._fbKey === fbKey);
+    if (!p) return;
+    const updated = {
+      id: p.id,
       emoji: document.getElementById('edit-emoji').value.trim() || '🥛',
       name: document.getElementById('edit-name').value.trim(),
       desc: document.getElementById('edit-desc').value.trim(),
-      price: parseInt(document.getElementById('edit-price').value)||0,
+      price: parseInt(document.getElementById('edit-price').value) || 0,
       unit: document.getElementById('edit-unit').value.trim(),
       category: document.getElementById('edit-category').value.trim(),
       badge: document.getElementById('edit-badge').value.trim(),
       image: document.getElementById('edit-img-data').value
     };
-    saveProducts(prods);
+    set(ref(db, 'products/' + fbKey), updated);
     closeEdit();
     showMsg('addMsg');
   };
@@ -768,13 +771,12 @@
   window.renderOrders = function() {
     let orders = getOrdersArray();
     const q = (document.getElementById('orderSearch') ? document.getElementById('orderSearch').value : '').toLowerCase().trim();
-    if (q) orders = orders.filter(o => (o.customerName||'').toLowerCase().includes(q));
+    if (q) orders = orders.filter(o => (o.customerName || '').toLowerCase().includes(q));
     if (orderFilter === 'pending') orders = orders.filter(o => o.status === 'pending');
     else if (orderFilter === 'done') orders = orders.filter(o => o.status === 'done');
     else if (orderFilter === 'cancelled') orders = orders.filter(o => o.status === 'cancelled');
     else if (orderFilter === 'whatsapp') orders = orders.filter(o => o.via === 'whatsapp');
     else if (orderFilter === 'direct') orders = orders.filter(o => o.via === 'direct');
-
     const container = document.getElementById('ordersContainer');
     if (!orders.length) {
       container.innerHTML = '<div class="empty-orders"><i class="ti ti-clipboard-off"></i>Koi order nahi mila.</div>';
@@ -784,60 +786,57 @@
   };
 
   function orderCardHTML(o) {
-    const dt = o.timestamp ? new Date(o.timestamp).toLocaleString('en-IN', { dateStyle:'short', timeStyle:'short' }) : '—';
-    const itemsList = (o.items||[]).map(x => '<span>' + x.name + ' ×' + x.qty + '</span>').join('');
+    const dt = o.timestamp ? new Date(o.timestamp).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+    const itemsList = (o.items || []).map(x => '<span>' + x.name + ' ×' + x.qty + '</span>').join('');
     return '<div class="order-card">' +
       '<div class="order-card-head">' +
-      '<div><div class="order-customer">' + (o.customerName||'Guest') + '</div><div class="order-time">' + dt + '</div></div>' +
+      '<div><div class="order-customer">' + (o.customerName || 'Guest') + '</div><div class="order-time">' + dt + '</div></div>' +
       '<div class="order-pills">' + statusPill(o.status) + viaPill(o.via) + '</div>' +
       '</div>' +
       '<div class="order-items-list">' + (itemsList || '<span style="color:var(--text-light);">No items</span>') + '</div>' +
       '<div class="order-footer-row">' +
-      '<div class="order-total">₹' + (o.total||0) + '</div>' +
+      '<div class="order-total">₹' + (o.total || 0) + '</div>' +
       '<div class="order-actions">' +
-      (o.status !== 'done' ? '<button class="action-btn success" onclick="updateOrderStatus(\'' + o._key + '\',\'done\')"><i class="ti ti-check" style="font-size:12px;"></i> Done</button>' : '') +
-      (o.status !== 'cancelled' ? '<button class="action-btn danger" onclick="updateOrderStatus(\'' + o._key + '\',\'cancelled\')"><i class="ti ti-x" style="font-size:12px;"></i> Cancel</button>' : '') +
-      '<button class="action-btn" onclick="openOrderDetail(\'' + o._key + '\')"><i class="ti ti-eye" style="font-size:12px;"></i></button>' +
-      '<button class="action-btn danger" onclick="deleteOrder(\'' + o._key + '\')"><i class="ti ti-trash" style="font-size:12px;"></i></button>' +
+      (o.status !== 'done' ? '<button class="action-btn success" onclick="updateOrderStatus('' + o._key + '','done')"><i class="ti ti-check" style="font-size:12px;"></i> Done</button>' : '') +
+      (o.status !== 'cancelled' ? '<button class="action-btn danger" onclick="updateOrderStatus('' + o._key + '','cancelled')"><i class="ti ti-x" style="font-size:12px;"></i> Cancel</button>' : '') +
+      '<button class="action-btn" onclick="openOrderDetail('' + o._key + '')"><i class="ti ti-eye" style="font-size:12px;"></i></button>' +
+      '<button class="action-btn danger" onclick="deleteOrder('' + o._key + '')"><i class="ti ti-trash" style="font-size:12px;"></i></button>' +
       '</div></div>' +
       '</div>';
   }
 
-  window.updateOrderStatus = function(key, status) {
-    update(ref(db, 'orders/' + key), { status });
-  };
+  window.updateOrderStatus = function(key, status) { update(ref(db, 'orders/' + key), { status }); };
 
-  // FIX: Custom confirm instead of browser confirm()
   window.deleteOrder = function(key) {
-    showConfirm('Order Delete', 'Is order ko delete karna hai?', () => {
+    window.showConfirm('Order Delete', 'Is order ko delete karna hai?', function() {
       remove(ref(db, 'orders/' + key));
     });
   };
 
   window.clearAllOrders = function() {
-    showConfirm('Saare Orders Delete', 'Saare orders delete ho jaenge. Ye undo nahi ho sakta!', () => {
+    window.showConfirm('Saare Orders Delete', 'Saare orders delete ho jaenge. Ye undo nahi ho sakta!', function() {
       set(ref(db, 'orders'), null);
     });
   };
 
   window.openOrderDetail = function(key) {
     const o = { _key: key, ...cachedOrders[key] };
-    const dt = o.timestamp ? new Date(o.timestamp).toLocaleString('en-IN', { dateStyle:'long', timeStyle:'short' }) : '—';
+    const dt = o.timestamp ? new Date(o.timestamp).toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' }) : '—';
     let html = '<table style="width:100%;font-size:13px;border-collapse:collapse;">';
-    html += '<tr><td style="color:var(--text-light);padding:6px 0;width:110px;">Customer</td><td style="font-weight:600;">' + (o.customerName||'Guest') + '</td></tr>';
+    html += '<tr><td style="color:var(--text-light);padding:6px 0;width:110px;">Customer</td><td style="font-weight:600;">' + (o.customerName || 'Guest') + '</td></tr>';
     html += '<tr><td style="color:var(--text-light);padding:6px 0;">Time</td><td>' + dt + '</td></tr>';
     html += '<tr><td style="color:var(--text-light);padding:6px 0;">Channel</td><td>' + viaPill(o.via) + '</td></tr>';
     html += '<tr><td style="color:var(--text-light);padding:6px 0;">Status</td><td>' + statusPill(o.status) + '</td></tr>';
     html += '</table>';
     html += '<div style="margin:16px 0;border-top:1px solid var(--border);padding-top:14px;">';
     html += '<div style="font-size:12px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Items</div>';
-    (o.items||[]).forEach(x => {
+    (o.items || []).forEach(x => {
       html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
         '<span>' + x.name + ' × ' + x.qty + '</span>' +
-        '<span style="font-weight:600;">₹' + (x.price*x.qty) + '</span></div>';
+        '<span style="font-weight:600;">₹' + (x.price * x.qty) + '</span></div>';
     });
     html += '<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:15px;font-weight:700;">' +
-      '<span>Total</span><span style="color:var(--gold);">₹' + (o.total||0) + '</span></div>';
+      '<span>Total</span><span style="color:var(--gold);">₹' + (o.total || 0) + '</span></div>';
     html += '</div>';
     document.getElementById('orderDetailContent').innerHTML = html;
     document.getElementById('orderDetailModal').style.display = 'flex';
@@ -845,9 +844,9 @@
   window.closeOrderDetail = function() { document.getElementById('orderDetailModal').style.display = 'none'; };
 
   function statusPill(s) {
-    const map = { pending:'status-pending', done:'status-done', cancelled:'status-cancelled' };
-    const label = { pending:'Pending', done:'Completed', cancelled:'Cancelled' };
-    return '<span class="status-pill ' + (map[s]||'status-pending') + '">' + (label[s]||'Pending') + '</span>';
+    const map = { pending: 'status-pending', done: 'status-done', cancelled: 'status-cancelled' };
+    const label = { pending: 'Pending', done: 'Completed', cancelled: 'Cancelled' };
+    return '<span class="status-pill ' + (map[s] || 'status-pending') + '">' + (label[s] || 'Pending') + '</span>';
   }
   function viaPill(v) {
     if (v === 'whatsapp') return '<span class="via-pill via-whatsapp"><i class="ti ti-brand-whatsapp" style="font-size:11px;"></i> WhatsApp</span>';
@@ -857,24 +856,23 @@
   // ── SETTINGS ──
   window.loadSettingsForm = function() {
     const s = getSettings();
-    document.getElementById('s-phone').value = s.phone||'';
-    document.getElementById('s-wa').value = s.whatsapp||'';
-    document.getElementById('s-address').value = s.address||'';
-    document.getElementById('s-hours').value = s.hours||'';
-    document.getElementById('s-email').value = s.email||'';
-    document.getElementById('s-h1').value = s.h1||'6:00 AM – 10:00 AM';
-    document.getElementById('s-h2').value = s.h2||'12:00 PM – 2:00 PM';
-    document.getElementById('s-h3').value = s.h3||'5:00 PM – 8:00 PM';
-    document.getElementById('s-h4').value = s.h4||'7:00 AM – 12:00 PM';
-    document.getElementById('s-imgbb').value = s.imgbbKey||'';
+    document.getElementById('s-phone').value = s.phone || '';
+    document.getElementById('s-wa').value = s.whatsapp || '';
+    document.getElementById('s-address').value = s.address || '';
+    document.getElementById('s-hours').value = s.hours || '';
+    document.getElementById('s-email').value = s.email || '';
+    document.getElementById('s-h1').value = s.h1 || '6:00 AM – 10:00 AM';
+    document.getElementById('s-h2').value = s.h2 || '12:00 PM – 2:00 PM';
+    document.getElementById('s-h3').value = s.h3 || '5:00 PM – 8:00 PM';
+    document.getElementById('s-h4').value = s.h4 || '7:00 AM – 12:00 PM';
+    document.getElementById('s-imgbb').value = s.imgbbKey || '';
     getCreds().then(c => { document.getElementById('s-user').value = c.user; });
   };
 
   window.saveSettings = function() {
     const s = getSettings();
     s.phone = document.getElementById('s-phone').value.trim();
-    // FIX: clean WA number before saving
-    s.whatsapp = document.getElementById('s-wa').value.trim().replace(/[^0-9]/g,'');
+    s.whatsapp = document.getElementById('s-wa').value.trim().replace(/[^0-9]/g, '');
     s.address = document.getElementById('s-address').value.trim();
     s.hours = document.getElementById('s-hours').value.trim();
     s.email = document.getElementById('s-email').value.trim();
@@ -903,7 +901,6 @@
     showMsg('credsMsg');
   };
 
-  // FIX: ImgBB API key save
   window.saveImgBB = function() {
     const s = getSettings();
     s.imgbbKey = document.getElementById('s-imgbb').value.trim();
@@ -911,55 +908,34 @@
     showMsg('imgbbMsg');
   };
 
-  // FIX: Image upload via ImgBB API (free, no auth needed for client)
+  // ── IMAGE UPLOAD ──
   window.handleFileUpload = async function(fileInputId, thumbId, fnameId, boxId, dataId, emojiId, labelId, progressId) {
     const file = document.getElementById(fileInputId).files[0];
     if (!file) return;
-
-    // Validation: max 2MB
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image 2MB se choti honi chahiye. Please compress karke dobara try karo.');
-      return;
-    }
-
+    if (file.size > 2 * 1024 * 1024) { alert('Image 2MB se choti honi chahiye.'); return; }
     const s = getSettings();
     const imgbbKey = s.imgbbKey || '';
-
     const progress = document.getElementById(progressId);
     const label = document.getElementById(labelId);
     if (progress) { progress.textContent = 'Uploading...'; progress.classList.add('show'); }
     if (label) label.style.opacity = '0.6';
-
     if (imgbbKey) {
-      // Upload to ImgBB
       try {
         const formData = new FormData();
         formData.append('image', file);
-        const resp = await fetch('https://api.imgbb.com/1/upload?key=' + imgbbKey, {
-          method: 'POST',
-          body: formData
-        });
+        const resp = await fetch('https://api.imgbb.com/1/upload?key=' + imgbbKey, { method: 'POST', body: formData });
         const result = await resp.json();
         if (result.success) {
-          const url = result.data.url;
-          setImagePreview(thumbId, fnameId, boxId, dataId, url, file.name);
-          if (progress) { progress.textContent = '✓ Uploaded!'; setTimeout(()=>progress.classList.remove('show'),2000); }
-        } else {
-          throw new Error(result.error && result.error.message ? result.error.message : 'Upload failed');
-        }
+          setImagePreview(thumbId, fnameId, boxId, dataId, result.data.url, file.name);
+          if (progress) { progress.textContent = '✓ Uploaded!'; setTimeout(() => progress.classList.remove('show'), 2000); }
+        } else { throw new Error('Upload failed'); }
       } catch(e) {
-        if (progress) { progress.textContent = 'Upload failed: ' + e.message; progress.style.color = 'red'; setTimeout(()=>{progress.classList.remove('show');progress.style.color='';},3000); }
-        // Fallback to base64 (small images only)
+        if (progress) { progress.textContent = 'Upload failed. URL use karo.'; progress.style.color = 'red'; setTimeout(() => { progress.classList.remove('show'); progress.style.color = ''; }, 3000); }
         readAsBase64(file, thumbId, fnameId, boxId, dataId);
       }
     } else {
-      // No ImgBB key: use base64 with size warning
-      if (file.size > 500 * 1024) {
-        if (progress) { progress.textContent = '⚠️ ImgBB key nahi hai, image size large hai. Settings mein ImgBB key daalo.'; progress.style.color = 'orange'; setTimeout(()=>{progress.classList.remove('show');progress.style.color='';},4000); }
-      }
       readAsBase64(file, thumbId, fnameId, boxId, dataId);
     }
-
     if (label) label.style.opacity = '1';
   };
 
