@@ -613,8 +613,24 @@
   window.doLogin = async function() {
     const u = document.getElementById('loginUser').value.trim();
     const p = document.getElementById('loginPass').value;
-    const c = await getCreds();
-    if (u === c.user && p === c.pass) {
+    // Default credentials as fallback
+    const DEFAULT_USER = 'admin';
+    const DEFAULT_PASS = 'vikasdairy123';
+    let isValid = false;
+    // Check default first
+    if (u === DEFAULT_USER && p === DEFAULT_PASS) {
+      isValid = true;
+    } else {
+      // Check Firebase credentials
+      try {
+        const c = await getCreds();
+        if (u === c.user && p === c.pass) isValid = true;
+      } catch(e) {
+        // Firebase fetch failed — only default works
+      }
+    }
+    if (isValid) {
+      document.getElementById('loginError').textContent = '';
       document.getElementById('loginOverlay').style.display = 'none';
       document.getElementById('adminLayout').style.display = 'flex';
       document.getElementById('mobHeader').style.display = 'flex';
