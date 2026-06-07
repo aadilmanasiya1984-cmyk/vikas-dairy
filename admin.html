@@ -656,7 +656,7 @@
     document.getElementById('dash-products').textContent = prods.length;
     document.getElementById('dash-featured').textContent = prods.filter(p => p.badge).length;
     document.getElementById('dash-orders').textContent = orders.length;
-    document.getElementById('dash-revenue').textContent = '₹' + revenue;
+    document.getElementById('dash-revenue').textContent = '\u20B9' + revenue;
     document.getElementById('dashProductsTable').innerHTML = prods.map(p =>
       '<tr><td>' + thumbHTML(p) + '</td><td style="font-weight:500;">' + p.name + '</td>' +
       '<td style="font-weight:500;color:var(--gold);">&#8377;' + p.price + '</td>' +
@@ -675,7 +675,7 @@
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
       '<div><span style="font-weight:600;">' + (o.customerName || 'Guest') + '</span> <span style="color:var(--text-light);margin-left:6px;">' + dt + '</span></div>' +
       '<div style="display:flex;align-items:center;gap:8px;">' +
-      '<span style="font-weight:700;color:var(--gold);">₹' + (o.total || 0) + '</span>' +
+      '<span style="font-weight:700;color:var(--gold);">\u20B9' + (o.total || 0) + '</span>' +
       statusPill(o.status) + '</div></div>';
   }
 
@@ -691,8 +691,8 @@
       '<td style="color:var(--text-light);font-size:12px;">' + (p.category || '—') + '</td>' +
       '<td>' + (p.badge ? '<span class="badge-pill">' + p.badge + '</span>' : '—') + '</td>' +
       '<td>' +
-      '<button class="action-btn" onclick='window.openEdit("' + p._fbKey + '")' ><i class="ti ti-edit" style="font-size:13px;"></i> Edit</button>' +
-      '<button class="action-btn danger" onclick='window.deleteProduct("' + p._fbKey + '")' ><i class="ti ti-trash" style="font-size:13px;"></i></button>' +
+      '<button class="action-btn" onclick="window.openEdit(this.dataset.key)" data-key="' + p._fbKey + '"><i class="ti ti-edit" style="font-size:13px;"></i> Edit</button>' +
+      '<button class="action-btn danger" onclick="window.deleteProduct(this.dataset.key)" data-key="' + p._fbKey + '"><i class="ti ti-trash" style="font-size:13px;"></i></button>' +
       '</td></tr>'
     ).join('');
   };
@@ -811,7 +811,7 @@
       '</div>' +
       '<div class="order-items-list">' + (itemsList || '<span style="color:var(--text-light);">No items</span>') + '</div>' +
       '<div class="order-footer-row">' +
-      '<div class="order-total">₹' + (o.total || 0) + '</div>' +
+      '<div class="order-total">\u20B9' + (o.total || 0) + '</div>' +
       '<div class="order-actions">' +
       (o.status !== 'done' ? '<button class="action-btn success" onclick="updateOrderStatus('' + o._key + '','done')"><i class="ti ti-check" style="font-size:12px;"></i> Done</button>' : '') +
       (o.status !== 'cancelled' ? '<button class="action-btn danger" onclick="updateOrderStatus('' + o._key + '','cancelled')"><i class="ti ti-x" style="font-size:12px;"></i> Cancel</button>' : '') +
@@ -849,10 +849,10 @@
     (o.items || []).forEach(x => {
       html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
         '<span>' + x.name + ' × ' + x.qty + '</span>' +
-        '<span style="font-weight:600;">₹' + (x.price * x.qty) + '</span></div>';
+        '<span style="font-weight:600;">\u20B9' + (x.price * x.qty) + '</span></div>';
     });
     html += '<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:15px;font-weight:700;">' +
-      '<span>Total</span><span style="color:var(--gold);">₹' + (o.total || 0) + '</span></div>';
+      '<span>Total</span><span style="color:var(--gold);">\u20B9' + (o.total || 0) + '</span></div>';
     html += '</div>';
     document.getElementById('orderDetailContent').innerHTML = html;
     document.getElementById('orderDetailModal').style.display = 'flex';
