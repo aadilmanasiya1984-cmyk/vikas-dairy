@@ -15,6 +15,8 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Outfit', sans-serif; background: #f4f0e8; color: var(--text); min-height: 100vh; }
+
+    /* LOGIN */
     .login-overlay { position: fixed; inset: 0; background: var(--green); display: flex; align-items: center; justify-content: center; z-index: 9999; }
     .login-box { background: #fff; border-radius: 16px; padding: 40px; width: 100%; max-width: 360px; text-align: center; }
     .login-logo { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 700; color: var(--green); margin-bottom: 4px; }
@@ -25,6 +27,8 @@
     .login-btn { width: 100%; background: var(--green); color: #fff; border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; }
     .login-error { font-size: 13px; color: var(--danger); margin-top: 10px; min-height: 18px; }
     .login-hint { font-size: 12px; color: var(--text-light); margin-top: 16px; }
+
+    /* LAYOUT */
     .admin-layout { display: flex; min-height: 100vh; }
     .sidebar { width: 240px; background: var(--green); flex-shrink: 0; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
     .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -36,6 +40,7 @@
     .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
     .nav-item.active { background: rgba(255,255,255,0.12); color: #fff; }
     .nav-item i { font-size: 18px; }
+    .nav-badge { background: var(--gold); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; margin-left: auto; }
     .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.1); }
     .logout-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5); background: none; border: none; font-family: 'Outfit', sans-serif; width: 100%; }
     .logout-btn:hover { color: #fff; }
@@ -47,13 +52,19 @@
     .page-header { margin-bottom: 28px; }
     .page-title { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 700; color: var(--green); }
     .page-sub { font-size: 14px; color: var(--text-light); margin-top: 4px; font-weight: 300; }
+
+    /* STATS */
     .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
     .stat-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px; }
     .stat-icon { font-size: 22px; margin-bottom: 10px; color: var(--green); }
     .stat-val { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 700; color: var(--green); }
     .stat-label { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+    /* PANELS */
     .panel { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 20px; }
     .panel-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700; color: var(--green); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .panel-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .panel-title-row .panel-title { margin-bottom: 0; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
     .form-group { display: flex; flex-direction: column; gap: 5px; }
     .form-group label { font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -61,8 +72,12 @@
     .form-group input:focus { border-color: var(--green); background: #fff; }
     .save-btn { background: var(--green); color: #fff; border: none; border-radius: 8px; padding: 11px 24px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px; }
     .save-btn:hover { background: var(--green-mid); }
+    .save-btn.danger { background: var(--danger); }
+    .save-btn.danger:hover { background: #a93226; }
     .success-msg { font-size: 13px; color: var(--success); margin-left: 12px; display: none; }
     .success-msg.show { display: inline; }
+
+    /* IMAGE UPLOAD - FIX: ImgBB upload support + URL */
     .img-upload-box { border: 2px dashed var(--border); border-radius: 10px; padding: 0; background: var(--cream); transition: border-color 0.2s; overflow: hidden; }
     .img-upload-box.has-image { border-style: solid; border-color: var(--green-mid); }
     .img-upload-inner { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
@@ -71,31 +86,82 @@
     .img-upload-info { flex: 1; min-width: 0; }
     .img-upload-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .img-upload-hint { font-size: 11px; color: var(--text-light); margin-top: 2px; }
-    .img-upload-actions { display: flex; gap: 6px; margin-top: 6px; }
-    .upload-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--green); color: #fff; border: none; border-radius: 6px; padding: 7px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; transition: background 0.2s; }
+    .img-upload-actions { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    .upload-btn { display: inline-flex; align-items: center; gap: 6px; background: var(--green); color: #fff; border: none; border-radius: 6px; padding: 7px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; transition: background 0.2s; white-space: nowrap; }
     .upload-btn:hover { background: var(--green-mid); }
     .upload-btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
     .upload-btn.secondary:hover { background: var(--cream-dark); }
     .upload-btn.danger-btn { background: #fff; color: var(--danger); border: 1px solid #f5c6c6; }
     .upload-btn.danger-btn:hover { background: #fff0f0; }
+    .upload-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .url-input-wrap { display: none; margin-top: 8px; }
     .url-input-wrap.show { display: block; }
     .url-input-wrap input { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-family: 'Outfit', sans-serif; outline: none; background: #fff; }
     .url-input-wrap input:focus { border-color: var(--green); }
+    .upload-progress { font-size: 11px; color: var(--green); margin-top: 4px; display: none; }
+    .upload-progress.show { display: block; }
+
+    /* IMGBB NOTE */
+    .imgbb-note { background: #e8f4fd; border: 1px solid #b3d9f5; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; color: #1a5276; }
+    .imgbb-note a { color: #1a5276; font-weight: 600; }
+
+    /* TABLES */
     .products-table { width: 100%; border-collapse: collapse; }
     .products-table th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); }
     .products-table td { padding: 12px 14px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
     .products-table tr:last-child td { border-bottom: none; }
     .products-table tr:hover td { background: var(--cream); }
     .badge-pill { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; background: var(--green); color: #fff; }
+    .status-pill { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 4px; }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-done { background: #d1f2e1; color: var(--success); }
+    .status-cancelled { background: #fde8e8; color: var(--danger); }
+    .via-pill { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; }
+    .via-whatsapp { background: #d9f7e4; color: #1a6b3a; }
+    .via-direct { background: #e8ecff; color: #3a4ab8; }
     .action-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; font-family: 'Outfit', sans-serif; margin-right: 4px; }
     .action-btn:hover { background: var(--cream-dark); }
     .action-btn.danger { color: var(--danger); border-color: #f5c6c6; }
     .action-btn.danger:hover { background: #fff0f0; }
+    .action-btn.success { color: var(--success); border-color: #b8e6c9; }
+    .action-btn.success:hover { background: #f0fff7; }
     .prod-thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); }
     .prod-thumb-emoji { font-size: 26px; line-height: 1; }
     .add-product-form { background: var(--cream); border: 1px dashed var(--border); border-radius: 12px; padding: 20px; margin-top: 20px; }
     .add-product-form h4 { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--green); margin-bottom: 14px; }
+
+    /* ORDER HISTORY */
+    .order-filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .order-filter-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--cream); font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Outfit', sans-serif; color: var(--text); transition: all 0.15s; }
+    .order-filter-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+    .order-card { background: var(--cream); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 10px; }
+    .order-card-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .order-id { font-size: 12px; color: var(--text-light); }
+    .order-customer { font-size: 15px; font-weight: 600; color: var(--text); }
+    .order-time { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+    .order-pills { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .order-items-list { font-size: 13px; color: var(--text); margin-bottom: 10px; }
+    .order-items-list span { background: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; margin-right: 4px; margin-bottom: 4px; display: inline-block; font-size: 12px; }
+    .order-footer-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .order-total { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 700; color: var(--gold); }
+    .order-actions { display: flex; gap: 6px; }
+    .empty-orders { text-align: center; padding: 48px 20px; color: var(--text-light); }
+    .empty-orders i { font-size: 40px; display: block; margin-bottom: 12px; color: var(--border); }
+    .order-search { width: 100%; max-width: 280px; padding: 9px 12px 9px 34px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Outfit', sans-serif; outline: none; background: var(--cream); margin-bottom: 12px; }
+    .order-search-wrap { position: relative; display: inline-block; }
+    .order-search-wrap i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 15px; pointer-events: none; }
+
+    /* CONFIRM DIALOG */
+    .confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 800; align-items: center; justify-content: center; }
+    .confirm-overlay.show { display: flex; }
+    .confirm-box { background: #fff; border-radius: 14px; padding: 28px; max-width: 360px; width: 90%; text-align: center; }
+    .confirm-box h4 { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--green); margin-bottom: 8px; }
+    .confirm-box p { font-size: 13px; color: var(--text-light); margin-bottom: 20px; line-height: 1.5; }
+    .confirm-btns { display: flex; gap: 10px; justify-content: center; }
+    .confirm-yes { background: var(--danger); color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; }
+    .confirm-no { background: #fff; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 10px 22px; font-size: 14px; cursor: pointer; font-family: 'Outfit', sans-serif; }
+
+    /* MOBILE */
     .mob-header { display: none; background: var(--green); padding: 14px 20px; align-items: center; justify-content: space-between; }
     .mob-logo { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 700; color: #fff; }
     .mob-logo em { color: var(--gold-light); font-style: normal; }
@@ -126,6 +192,18 @@
   </div>
 </div>
 
+<!-- FIX: Custom confirm dialog (browser confirm() blocks async code) -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h4 id="confirmTitle">Confirm</h4>
+    <p id="confirmMsg">Are you sure?</p>
+    <div class="confirm-btns">
+      <button class="confirm-yes" id="confirmYes">Haan, karo</button>
+      <button class="confirm-no" onclick="closeConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="mob-header" id="mobHeader" style="display:none;">
   <div class="mob-logo">Vikas <em>Dairy</em> Admin</div>
   <button class="mob-menu-btn" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
@@ -141,6 +219,7 @@
     <div class="sidebar-nav">
       <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
       <div class="nav-item" onclick="showPage('products')" id="nav-products"><i class="ti ti-milk"></i> Products</div>
+      <div class="nav-item" onclick="showPage('orders')" id="nav-orders"><i class="ti ti-clipboard-list"></i> Orders <span class="nav-badge" id="pendingBadge" style="display:none;">0</span></div>
       <div class="nav-item" onclick="showPage('settings')" id="nav-settings"><i class="ti ti-settings"></i> Store Settings</div>
     </div>
     <div class="sidebar-footer">
@@ -151,6 +230,7 @@
 
   <div class="main">
 
+    <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="page-header">
         <div class="page-title">Dashboard</div>
@@ -159,6 +239,8 @@
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-icon"><i class="ti ti-milk"></i></div><div class="stat-val" id="dash-products">—</div><div class="stat-label">Total Products</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="ti ti-star"></i></div><div class="stat-val" id="dash-featured">—</div><div class="stat-label">Badged Items</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="ti ti-clipboard-list"></i></div><div class="stat-val" id="dash-orders">—</div><div class="stat-label">Total Orders</div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="ti ti-currency-rupee"></i></div><div class="stat-val" id="dash-revenue">—</div><div class="stat-label">Total Revenue</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="ti ti-clock"></i></div><div class="stat-val">3</div><div class="stat-label">Pickup Slots</div></div>
         <div class="stat-card"><div class="stat-icon"><i class="ti ti-check"></i></div><div class="stat-val">Live</div><div class="stat-label">Website Status</div></div>
       </div>
@@ -169,8 +251,13 @@
           <tbody id="dashProductsTable"></tbody>
         </table>
       </div>
+      <div class="panel">
+        <div class="panel-title"><i class="ti ti-clock-hour-4" style="font-size:20px;"></i> Recent Orders</div>
+        <div id="dashRecentOrders"><p style="color:var(--text-light);font-size:14px;">No orders yet.</p></div>
+      </div>
     </div>
 
+    <!-- PRODUCTS -->
     <div class="page" id="page-products">
       <div class="page-header">
         <div class="page-title">Manage Products</div>
@@ -179,15 +266,21 @@
       <div class="panel">
         <div class="panel-title"><i class="ti ti-milk" style="font-size:20px;"></i> All Products</div>
         <table class="products-table">
-          <thead><tr><th>Image</th><th>Name</th><th>Description</th><th>Price</th><th>Unit</th><th>Badge</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Image</th><th>Name</th><th>Description</th><th>Price</th><th>Unit</th><th>Category</th><th>Badge</th><th>Actions</th></tr></thead>
           <tbody id="productsTableBody"></tbody>
         </table>
         <div class="add-product-form">
           <h4><i class="ti ti-plus" style="font-size:18px;vertical-align:-2px;margin-right:6px;"></i>Add New Product</h4>
+
+          <!-- FIX: ImgBB info note -->
+          <div class="imgbb-note">
+            💡 <strong>Image tip:</strong> Folder se image select karo — automatic upload hoga. Ya phir kisi bhi image ka URL paste karo (Google, Cloudinary, etc.)
+          </div>
+
           <div class="form-group" style="margin-bottom:14px;">
             <label>Product Name *</label>
             <input type="text" id="np-name" placeholder="Full Cream Milk" />
-            <input type="hidden" id="np-emoji" value="🖼️" />
+            <input type="hidden" id="np-emoji" value="🥛" />
           </div>
           <div class="form-group" style="margin-bottom:14px;">
             <label>Product Image</label>
@@ -198,13 +291,14 @@
                   <div class="img-upload-name" id="np-fname">Koi image select nahi ki</div>
                   <div class="img-upload-hint">Folder se photo select karo ya URL paste karo</div>
                   <div class="img-upload-actions">
-                    <label class="upload-btn">
+                    <label class="upload-btn" id="np-upload-label">
                       <i class="ti ti-folder-open" style="font-size:14px;"></i> Folder se Chunno
-                      <input type="file" id="np-file" accept="image/*" style="display:none;" onchange="handleFileSelect('np-file','np-thumb','np-fname','np-upload-box','np-img-data','np-emoji')" />
+                      <input type="file" id="np-file" accept="image/*" style="display:none;" onchange="handleFileUpload('np-file','np-thumb','np-fname','np-upload-box','np-img-data','np-emoji','np-upload-label','np-progress')" />
                     </label>
                     <button class="upload-btn secondary" onclick="toggleUrlInput('np-url-wrap')"><i class="ti ti-link" style="font-size:14px;"></i> URL</button>
                     <button class="upload-btn danger-btn" onclick="clearImage('np-thumb','np-fname','np-upload-box','np-img-data','np-url-input','np-url-wrap','np-emoji')"><i class="ti ti-x" style="font-size:13px;"></i></button>
                   </div>
+                  <div class="upload-progress" id="np-progress">Uploading...</div>
                   <div class="url-input-wrap" id="np-url-wrap">
                     <input type="url" id="np-url-input" placeholder="https://example.com/milk.jpg" oninput="handleUrlInput('np-url-input','np-thumb','np-fname','np-upload-box','np-img-data')" />
                   </div>
@@ -219,6 +313,9 @@
           </div>
           <div class="form-row">
             <div class="form-group"><label>Unit</label><input type="text" id="np-unit" placeholder="per litre" /></div>
+            <div class="form-group"><label>Category</label><input type="text" id="np-category" placeholder="Milk / Drinks / Ghee & Butter…" /></div>
+          </div>
+          <div class="form-row">
             <div class="form-group"><label>Badge (optional)</label><input type="text" id="np-badge" placeholder="Best Seller" /></div>
           </div>
           <button class="save-btn" onclick="addProduct()"><i class="ti ti-plus"></i> Add Product</button>
@@ -227,6 +324,36 @@
       </div>
     </div>
 
+    <!-- ORDERS -->
+    <div class="page" id="page-orders">
+      <div class="page-header">
+        <div class="page-title">Order History</div>
+        <div class="page-sub">Customer orders placed via WhatsApp or direct confirm.</div>
+      </div>
+      <div class="panel">
+        <div class="panel-title-row">
+          <div class="panel-title"><i class="ti ti-clipboard-list" style="font-size:20px;"></i> All Orders</div>
+          <button class="save-btn danger" onclick="clearAllOrders()" style="font-size:12px;padding:8px 14px;"><i class="ti ti-trash"></i> Clear All</button>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+          <div class="order-search-wrap">
+            <i class="ti ti-search"></i>
+            <input type="text" class="order-search" id="orderSearch" placeholder="Search by name…" oninput="renderOrders()" />
+          </div>
+        </div>
+        <div class="order-filter-row">
+          <button class="order-filter-btn active" data-status="all" onclick="setOrderFilter('all')">All</button>
+          <button class="order-filter-btn" data-status="pending" onclick="setOrderFilter('pending')">Pending</button>
+          <button class="order-filter-btn" data-status="done" onclick="setOrderFilter('done')">Completed</button>
+          <button class="order-filter-btn" data-status="cancelled" onclick="setOrderFilter('cancelled')">Cancelled</button>
+          <button class="order-filter-btn" data-status="whatsapp" onclick="setOrderFilter('whatsapp')">WhatsApp</button>
+          <button class="order-filter-btn" data-status="direct" onclick="setOrderFilter('direct')">Direct</button>
+        </div>
+        <div id="ordersContainer"><div class="empty-orders"><i class="ti ti-clipboard-off"></i>Abhi tak koi order nahi aaya.</div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="page-header">
         <div class="page-title">Store Settings</div>
@@ -236,12 +363,22 @@
         <div class="panel-title"><i class="ti ti-building-store" style="font-size:20px;"></i> Contact Information</div>
         <div class="form-row">
           <div class="form-group"><label>Phone Number</label><input type="text" id="s-phone" placeholder="+91 98765 43210" /></div>
-          <div class="form-group"><label>WhatsApp Number</label><input type="text" id="s-wa" placeholder="+91 98765 43210" /></div>
+          <div class="form-group">
+            <label>WhatsApp Number</label>
+            <input type="text" id="s-wa" placeholder="919876543210 (91 + 10 digit)" />
+          </div>
         </div>
-        <div class="form-group" style="margin-bottom:14px;"><label>Store Address</label><input type="text" id="s-address" placeholder="123, Main Road, Ahmedabad, Gujarat" /></div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Store Address</label>
+          <input type="text" id="s-address" placeholder="123, Main Road, Ahmedabad, Gujarat" />
+        </div>
         <div class="form-row">
           <div class="form-group"><label>Working Hours</label><input type="text" id="s-hours" placeholder="6:00 AM – 8:00 PM" /></div>
           <div class="form-group"><label>Email (optional)</label><input type="text" id="s-email" placeholder="vikasdairy@gmail.com" /></div>
+        </div>
+        <!-- FIX: WA number format hint -->
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:14px;background:var(--cream);border-radius:6px;padding:8px 12px;">
+          <strong>WhatsApp number format:</strong> Country code ke saath likho, e.g. <strong>919876543210</strong> (India +91 + 10 digit number). Koi spaces, +, ya dashes mat daalo.
         </div>
         <div style="display:flex;align-items:center;margin-top:6px;">
           <button class="save-btn" onclick="saveSettings()"><i class="ti ti-device-floppy"></i> Save Settings</button>
@@ -274,16 +411,34 @@
           <span class="success-msg" id="credsMsg">Credentials updated!</span>
         </div>
       </div>
+
+      <!-- FIX: ImgBB API key settings -->
+      <div class="panel">
+        <div class="panel-title"><i class="ti ti-photo" style="font-size:20px;"></i> Image Upload Settings</div>
+        <p style="font-size:13px;color:var(--text-light);margin-bottom:16px;">
+          Product images upload karne ke liye <strong>ImgBB</strong> ka free account banao aur apna API key neeche daalo.
+          <a href="https://imgbb.com" target="_blank" style="color:var(--green);font-weight:600;">imgbb.com pe jaao</a> → Account → API → Get API Key.
+        </p>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>ImgBB API Key</label>
+          <input type="text" id="s-imgbb" placeholder="your_imgbb_api_key_here" />
+        </div>
+        <div style="display:flex;align-items:center;margin-top:6px;">
+          <button class="save-btn" onclick="saveImgBB()"><i class="ti ti-device-floppy"></i> Save API Key</button>
+          <span class="success-msg" id="imgbbMsg">API key saved!</span>
+        </div>
+      </div>
     </div>
 
   </div>
 </div>
 
+<!-- EDIT MODAL -->
 <div style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:center;justify-content:center;overflow-y:auto;padding:20px;" id="editModal">
   <div style="background:#fff;border-radius:14px;padding:28px;width:90%;max-width:520px;margin:auto;">
     <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--green);margin-bottom:18px;">Edit Product</h3>
     <input type="hidden" id="edit-id" />
-    <input type="hidden" id="edit-emoji" value="🖼️" />
+    <input type="hidden" id="edit-emoji" value="🥛" />
     <div class="form-group" style="margin-bottom:14px;">
       <label>Name</label>
       <input type="text" id="edit-name" />
@@ -297,13 +452,14 @@
             <div class="img-upload-name" id="edit-fname">Koi image select nahi ki</div>
             <div class="img-upload-hint">Folder se photo select karo ya URL paste karo</div>
             <div class="img-upload-actions">
-              <label class="upload-btn">
+              <label class="upload-btn" id="edit-upload-label">
                 <i class="ti ti-folder-open" style="font-size:14px;"></i> Folder se Chunno
-                <input type="file" id="edit-file" accept="image/*" style="display:none;" onchange="handleFileSelect('edit-file','edit-thumb','edit-fname','edit-upload-box','edit-img-data','edit-emoji')" />
+                <input type="file" id="edit-file" accept="image/*" style="display:none;" onchange="handleFileUpload('edit-file','edit-thumb','edit-fname','edit-upload-box','edit-img-data','edit-emoji','edit-upload-label','edit-progress')" />
               </label>
               <button class="upload-btn secondary" onclick="toggleUrlInput('edit-url-wrap')"><i class="ti ti-link" style="font-size:14px;"></i> URL</button>
               <button class="upload-btn danger-btn" onclick="clearImage('edit-thumb','edit-fname','edit-upload-box','edit-img-data','edit-url-input','edit-url-wrap','edit-emoji')"><i class="ti ti-x" style="font-size:13px;"></i></button>
             </div>
+            <div class="upload-progress" id="edit-progress">Uploading...</div>
             <div class="url-input-wrap" id="edit-url-wrap">
               <input type="url" id="edit-url-input" placeholder="https://example.com/image.jpg" oninput="handleUrlInput('edit-url-input','edit-thumb','edit-fname','edit-upload-box','edit-img-data')" />
             </div>
@@ -318,7 +474,10 @@
     </div>
     <div class="form-row">
       <div class="form-group"><label>Unit</label><input type="text" id="edit-unit" /></div>
-      <div class="form-group"><label>Badge</label><input type="text" id="edit-badge" /></div>
+      <div class="form-group"><label>Category</label><input type="text" id="edit-category" /></div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Badge</label><input type="text" id="edit-badge" />
     </div>
     <div style="display:flex;gap:10px;margin-top:10px;">
       <button class="save-btn" onclick="saveEdit()"><i class="ti ti-check"></i> Save Changes</button>
@@ -327,10 +486,23 @@
   </div>
 </div>
 
+<!-- ORDER DETAIL MODAL -->
+<div style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:center;justify-content:center;overflow-y:auto;padding:20px;" id="orderDetailModal">
+  <div style="background:#fff;border-radius:14px;padding:28px;width:90%;max-width:480px;margin:auto;">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--green);margin-bottom:18px;display:flex;align-items:center;gap:8px;">
+      <i class="ti ti-receipt" style="font-size:20px;"></i> Order Detail
+    </h3>
+    <div id="orderDetailContent"></div>
+    <div style="margin-top:18px;">
+      <button class="action-btn" onclick="closeOrderDetail()">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getDatabase, ref, onValue, set, get, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBWw068HieZNTGOK0Z3Sah3cqQSNZfolV4",
@@ -346,26 +518,26 @@
   const db = getDatabase(app);
 
   const DEFAULT_PRODUCTS = [
-    { id:1, name:'Full Cream Milk', desc:'Rich, pure & fresh daily', price:60, unit:'per litre', emoji:'🥛', badge:'Best Seller', image:'' },
-    { id:2, name:'Fresh Curd', desc:'Thick, creamy & probiotic', price:40, unit:'per 500g', emoji:'🍶', badge:'Popular', image:'' },
-    { id:3, name:'Pure Ghee', desc:'Traditionally churned', price:550, unit:'per kg', emoji:'🧈', badge:'Premium', image:'' },
-    { id:4, name:'Ice Cream', desc:'Creamy & indulgent', price:30, unit:'per cup', emoji:'🍦', badge:'', image:'' },
-    { id:5, name:'Badam Shake', desc:'Nutritious almond shake', price:50, unit:'per glass', emoji:'🥤', badge:'New', image:'' },
-    { id:6, name:'Lassi', desc:'Sweet or salted', price:30, unit:'per glass', emoji:'🧃', badge:'Fresh', image:'' },
-    { id:7, name:'Paneer', desc:'Soft & fresh daily', price:80, unit:'per 250g', emoji:'🧀', badge:'', image:'' },
-    { id:8, name:'Butter', desc:'Creamy farm butter', price:60, unit:'per 100g', emoji:'🫙', badge:'', image:'' },
+    { id:1, name:'Full Cream Milk', desc:'Rich, pure & fresh daily', price:60, unit:'per litre', emoji:'🥛', badge:'Best Seller', image:'', category:'Milk' },
+    { id:2, name:'Fresh Curd', desc:'Thick, creamy & probiotic', price:40, unit:'per 500g', emoji:'🍶', badge:'Popular', image:'', category:'Curd & Paneer' },
+    { id:3, name:'Pure Ghee', desc:'Traditionally churned', price:550, unit:'per kg', emoji:'🧈', badge:'Premium', image:'', category:'Ghee & Butter' },
+    { id:4, name:'Ice Cream', desc:'Creamy & indulgent', price:30, unit:'per cup', emoji:'🍦', badge:'', image:'', category:'Sweets' },
+    { id:5, name:'Badam Shake', desc:'Nutritious almond shake', price:50, unit:'per glass', emoji:'🥤', badge:'New', image:'', category:'Drinks' },
+    { id:6, name:'Lassi', desc:'Sweet or salted', price:30, unit:'per glass', emoji:'🧃', badge:'Fresh', image:'', category:'Drinks' },
+    { id:7, name:'Paneer', desc:'Soft & fresh daily', price:80, unit:'per 250g', emoji:'🧀', badge:'', image:'', category:'Curd & Paneer' },
+    { id:8, name:'Butter', desc:'Creamy farm butter', price:60, unit:'per 100g', emoji:'🫙', badge:'', image:'', category:'Ghee & Butter' },
   ];
 
   let cachedProducts = [];
+  let cachedOrders = {};
+  let orderFilter = 'all';
 
-  // ── Credentials stored in Firebase ──
   async function getCreds() {
     const snap = await get(ref(db, 'adminCreds'));
     const d = snap.val();
     return { user: (d && d.user) || 'admin', pass: (d && d.pass) || 'vikasdairy123' };
   }
 
-  // ── Products real-time ──
   onValue(ref(db, 'products'), (snap) => {
     const data = snap.val();
     cachedProducts = data ? (Array.isArray(data) ? data : Object.values(data)) : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
@@ -374,25 +546,36 @@
     }
   });
 
-  // ── Settings real-time ──
+  onValue(ref(db, 'orders'), (snap) => {
+    const data = snap.val();
+    cachedOrders = data || {};
+    if (document.getElementById('adminLayout').style.display !== 'none') {
+      updateOrderBadge(); renderOrders(); renderDashboard();
+    }
+  });
+
   onValue(ref(db, 'settings'), (snap) => {
     window._cachedSettings = snap.val() || {};
     if (document.getElementById('adminLayout').style.display !== 'none') loadSettingsForm();
   });
 
   function getProducts() { return cachedProducts.length ? cachedProducts : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)); }
-
-  function saveProducts(p) {
-    set(ref(db, 'products'), p);
-  }
-
-  function saveSettingsObj(s) {
-    set(ref(db, 'settings'), s);
-  }
-
+  function saveProducts(p) { set(ref(db, 'products'), p); }
+  function saveSettingsObj(s) { set(ref(db, 'settings'), s); }
   function getSettings() { return window._cachedSettings || {}; }
 
-  // ── Login ──
+  function getOrdersArray() {
+    return Object.entries(cachedOrders).map(([key, val]) => ({ _key: key, ...val })).sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+  }
+
+  function updateOrderBadge() {
+    const pending = Object.values(cachedOrders).filter(o => o.status === 'pending').length;
+    const badge = document.getElementById('pendingBadge');
+    if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline'; }
+    else { badge.style.display = 'none'; }
+  }
+
+  // ── LOGIN ──
   window.doLogin = async function() {
     const u = document.getElementById('loginUser').value.trim();
     const p = document.getElementById('loginPass').value;
@@ -415,25 +598,47 @@
     document.getElementById('loginPass').value = '';
   };
 
+  // ── DASHBOARD ──
   window.renderDashboard = function() {
     const prods = getProducts();
+    const orders = getOrdersArray();
+    const revenue = orders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+(o.total||0),0);
     document.getElementById('dash-products').textContent = prods.length;
     document.getElementById('dash-featured').textContent = prods.filter(p=>p.badge).length;
+    document.getElementById('dash-orders').textContent = orders.length;
+    document.getElementById('dash-revenue').textContent = '₹' + revenue;
     document.getElementById('dashProductsTable').innerHTML = prods.map(p=>
       '<tr><td>' + thumbHTML(p) + '</td><td style="font-weight:500;">' + p.name + '</td>' +
       '<td style="font-weight:500;color:var(--gold);">&#8377;' + p.price + '</td>' +
       '<td>' + (p.badge ? '<span class="badge-pill">'+p.badge+'</span>' : '<span style="color:#ccc;">—</span>') + '</td></tr>'
     ).join('');
+    const recent = orders.slice(0, 5);
+    if (!recent.length) {
+      document.getElementById('dashRecentOrders').innerHTML = '<p style="color:var(--text-light);font-size:14px;">No orders yet.</p>';
+    } else {
+      document.getElementById('dashRecentOrders').innerHTML = recent.map(o => recentOrderHTML(o)).join('');
+    }
   };
 
+  function recentOrderHTML(o) {
+    const dt = o.timestamp ? new Date(o.timestamp).toLocaleString('en-IN', { dateStyle:'short', timeStyle:'short' }) : '—';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
+      '<div><span style="font-weight:600;">' + (o.customerName||'Guest') + '</span> <span style="color:var(--text-light);margin-left:6px;">' + dt + '</span></div>' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<span style="font-weight:700;color:var(--gold);">₹' + (o.total||0) + '</span>' +
+      statusPill(o.status) + '</div></div>';
+  }
+
+  // ── PRODUCTS ──
   window.renderProductsTable = function() {
     const prods = getProducts();
     document.getElementById('productsTableBody').innerHTML = prods.map(p=>
       '<tr><td>' + thumbHTML(p) + '</td>' +
       '<td style="font-weight:500;">' + p.name + '</td>' +
-      '<td style="color:var(--text-light);font-size:13px;">' + p.desc + '</td>' +
+      '<td style="color:var(--text-light);font-size:13px;">' + (p.desc||'') + '</td>' +
       '<td style="font-weight:600;color:var(--gold);">&#8377;' + p.price + '</td>' +
-      '<td style="color:var(--text-light);">' + p.unit + '</td>' +
+      '<td style="color:var(--text-light);">' + (p.unit||'') + '</td>' +
+      '<td style="color:var(--text-light);font-size:12px;">' + (p.category||'—') + '</td>' +
       '<td>' + (p.badge ? '<span class="badge-pill">'+p.badge+'</span>' : '—') + '</td>' +
       '<td><button class="action-btn" onclick="openEdit('+p.id+')"><i class="ti ti-edit" style="font-size:13px;"></i> Edit</button>' +
       '<button class="action-btn danger" onclick="deleteProduct('+p.id+')"><i class="ti ti-trash" style="font-size:13px;"></i></button></td></tr>'
@@ -441,38 +646,45 @@
   };
 
   window.addProduct = function() {
-    const emoji = document.getElementById('np-emoji').value.trim() || '🥛';
     const name = document.getElementById('np-name').value.trim();
-    const desc = document.getElementById('np-desc').value.trim();
     const price = parseInt(document.getElementById('np-price').value) || 0;
-    const unit = document.getElementById('np-unit').value.trim();
-    const badge = document.getElementById('np-badge').value.trim();
-    const image = document.getElementById('np-img-data').value;
     if (!name || !price) { alert('Product name aur price daalo.'); return; }
     const prods = getProducts();
     const newId = Math.max(0, ...prods.map(p=>p.id)) + 1;
-    prods.push({ id:newId, name, desc, price, unit, emoji, badge, image });
+    prods.push({
+      id: newId,
+      name,
+      desc: document.getElementById('np-desc').value.trim(),
+      price,
+      unit: document.getElementById('np-unit').value.trim(),
+      category: document.getElementById('np-category').value.trim(),
+      emoji: document.getElementById('np-emoji').value.trim() || '🥛',
+      badge: document.getElementById('np-badge').value.trim(),
+      image: document.getElementById('np-img-data').value
+    });
     saveProducts(prods);
-    ['np-name','np-desc','np-price','np-unit','np-badge'].forEach(id=>document.getElementById(id).value='');
+    ['np-name','np-desc','np-price','np-unit','np-category','np-badge'].forEach(id=>document.getElementById(id).value='');
     clearImage('np-thumb','np-fname','np-upload-box','np-img-data','np-url-input','np-url-wrap','np-emoji');
     showMsg('addMsg');
   };
 
   window.deleteProduct = function(id) {
-    if (!confirm('Is product ko delete karna hai?')) return;
-    saveProducts(getProducts().filter(p=>p.id!==id));
+    showConfirm('Product Delete', 'Is product ko delete karna hai? Ye wापस nahi aayega.', () => {
+      saveProducts(getProducts().filter(p=>p.id!==id));
+    });
   };
 
   window.openEdit = function(id) {
     const p = getProducts().find(x=>x.id===id);
     if (!p) return;
     document.getElementById('edit-id').value = p.id;
-    document.getElementById('edit-emoji').value = p.emoji;
+    document.getElementById('edit-emoji').value = p.emoji || '🥛';
     document.getElementById('edit-name').value = p.name;
-    document.getElementById('edit-desc').value = p.desc;
+    document.getElementById('edit-desc').value = p.desc || '';
     document.getElementById('edit-price').value = p.price;
-    document.getElementById('edit-unit').value = p.unit;
-    document.getElementById('edit-badge').value = p.badge;
+    document.getElementById('edit-unit').value = p.unit || '';
+    document.getElementById('edit-category').value = p.category || '';
+    document.getElementById('edit-badge').value = p.badge || '';
     document.getElementById('edit-img-data').value = p.image || '';
     document.getElementById('edit-url-input').value = '';
     document.getElementById('edit-url-wrap').classList.remove('show');
@@ -484,7 +696,6 @@
     }
     document.getElementById('editModal').style.display = 'flex';
   };
-
   window.closeEdit = function() { document.getElementById('editModal').style.display = 'none'; };
 
   window.saveEdit = function() {
@@ -494,11 +705,12 @@
     if (idx===-1) return;
     prods[idx] = {
       id,
-      emoji: document.getElementById('edit-emoji').value.trim(),
+      emoji: document.getElementById('edit-emoji').value.trim() || '🥛',
       name: document.getElementById('edit-name').value.trim(),
       desc: document.getElementById('edit-desc').value.trim(),
       price: parseInt(document.getElementById('edit-price').value)||0,
       unit: document.getElementById('edit-unit').value.trim(),
+      category: document.getElementById('edit-category').value.trim(),
       badge: document.getElementById('edit-badge').value.trim(),
       image: document.getElementById('edit-img-data').value
     };
@@ -507,6 +719,105 @@
     showMsg('addMsg');
   };
 
+  // ── ORDERS ──
+  window.setOrderFilter = function(f) {
+    orderFilter = f;
+    document.querySelectorAll('.order-filter-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-status') === f);
+    });
+    renderOrders();
+  };
+
+  window.renderOrders = function() {
+    let orders = getOrdersArray();
+    const q = (document.getElementById('orderSearch') ? document.getElementById('orderSearch').value : '').toLowerCase().trim();
+    if (q) orders = orders.filter(o => (o.customerName||'').toLowerCase().includes(q));
+    if (orderFilter === 'pending') orders = orders.filter(o => o.status === 'pending');
+    else if (orderFilter === 'done') orders = orders.filter(o => o.status === 'done');
+    else if (orderFilter === 'cancelled') orders = orders.filter(o => o.status === 'cancelled');
+    else if (orderFilter === 'whatsapp') orders = orders.filter(o => o.via === 'whatsapp');
+    else if (orderFilter === 'direct') orders = orders.filter(o => o.via === 'direct');
+
+    const container = document.getElementById('ordersContainer');
+    if (!orders.length) {
+      container.innerHTML = '<div class="empty-orders"><i class="ti ti-clipboard-off"></i>Koi order nahi mila.</div>';
+      return;
+    }
+    container.innerHTML = orders.map(o => orderCardHTML(o)).join('');
+  };
+
+  function orderCardHTML(o) {
+    const dt = o.timestamp ? new Date(o.timestamp).toLocaleString('en-IN', { dateStyle:'short', timeStyle:'short' }) : '—';
+    const itemsList = (o.items||[]).map(x => '<span>' + x.name + ' ×' + x.qty + '</span>').join('');
+    return '<div class="order-card">' +
+      '<div class="order-card-head">' +
+      '<div><div class="order-customer">' + (o.customerName||'Guest') + '</div><div class="order-time">' + dt + '</div></div>' +
+      '<div class="order-pills">' + statusPill(o.status) + viaPill(o.via) + '</div>' +
+      '</div>' +
+      '<div class="order-items-list">' + (itemsList || '<span style="color:var(--text-light);">No items</span>') + '</div>' +
+      '<div class="order-footer-row">' +
+      '<div class="order-total">₹' + (o.total||0) + '</div>' +
+      '<div class="order-actions">' +
+      (o.status !== 'done' ? '<button class="action-btn success" onclick="updateOrderStatus(\'' + o._key + '\',\'done\')"><i class="ti ti-check" style="font-size:12px;"></i> Done</button>' : '') +
+      (o.status !== 'cancelled' ? '<button class="action-btn danger" onclick="updateOrderStatus(\'' + o._key + '\',\'cancelled\')"><i class="ti ti-x" style="font-size:12px;"></i> Cancel</button>' : '') +
+      '<button class="action-btn" onclick="openOrderDetail(\'' + o._key + '\')"><i class="ti ti-eye" style="font-size:12px;"></i></button>' +
+      '<button class="action-btn danger" onclick="deleteOrder(\'' + o._key + '\')"><i class="ti ti-trash" style="font-size:12px;"></i></button>' +
+      '</div></div>' +
+      '</div>';
+  }
+
+  window.updateOrderStatus = function(key, status) {
+    update(ref(db, 'orders/' + key), { status });
+  };
+
+  // FIX: Custom confirm instead of browser confirm()
+  window.deleteOrder = function(key) {
+    showConfirm('Order Delete', 'Is order ko delete karna hai?', () => {
+      remove(ref(db, 'orders/' + key));
+    });
+  };
+
+  window.clearAllOrders = function() {
+    showConfirm('Saare Orders Delete', 'Saare orders delete ho jaenge. Ye undo nahi ho sakta!', () => {
+      set(ref(db, 'orders'), null);
+    });
+  };
+
+  window.openOrderDetail = function(key) {
+    const o = { _key: key, ...cachedOrders[key] };
+    const dt = o.timestamp ? new Date(o.timestamp).toLocaleString('en-IN', { dateStyle:'long', timeStyle:'short' }) : '—';
+    let html = '<table style="width:100%;font-size:13px;border-collapse:collapse;">';
+    html += '<tr><td style="color:var(--text-light);padding:6px 0;width:110px;">Customer</td><td style="font-weight:600;">' + (o.customerName||'Guest') + '</td></tr>';
+    html += '<tr><td style="color:var(--text-light);padding:6px 0;">Time</td><td>' + dt + '</td></tr>';
+    html += '<tr><td style="color:var(--text-light);padding:6px 0;">Channel</td><td>' + viaPill(o.via) + '</td></tr>';
+    html += '<tr><td style="color:var(--text-light);padding:6px 0;">Status</td><td>' + statusPill(o.status) + '</td></tr>';
+    html += '</table>';
+    html += '<div style="margin:16px 0;border-top:1px solid var(--border);padding-top:14px;">';
+    html += '<div style="font-size:12px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Items</div>';
+    (o.items||[]).forEach(x => {
+      html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
+        '<span>' + x.name + ' × ' + x.qty + '</span>' +
+        '<span style="font-weight:600;">₹' + (x.price*x.qty) + '</span></div>';
+    });
+    html += '<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:15px;font-weight:700;">' +
+      '<span>Total</span><span style="color:var(--gold);">₹' + (o.total||0) + '</span></div>';
+    html += '</div>';
+    document.getElementById('orderDetailContent').innerHTML = html;
+    document.getElementById('orderDetailModal').style.display = 'flex';
+  };
+  window.closeOrderDetail = function() { document.getElementById('orderDetailModal').style.display = 'none'; };
+
+  function statusPill(s) {
+    const map = { pending:'status-pending', done:'status-done', cancelled:'status-cancelled' };
+    const label = { pending:'Pending', done:'Completed', cancelled:'Cancelled' };
+    return '<span class="status-pill ' + (map[s]||'status-pending') + '">' + (label[s]||'Pending') + '</span>';
+  }
+  function viaPill(v) {
+    if (v === 'whatsapp') return '<span class="via-pill via-whatsapp"><i class="ti ti-brand-whatsapp" style="font-size:11px;"></i> WhatsApp</span>';
+    return '<span class="via-pill via-direct">Direct</span>';
+  }
+
+  // ── SETTINGS ──
   window.loadSettingsForm = function() {
     const s = getSettings();
     document.getElementById('s-phone').value = s.phone||'';
@@ -518,14 +829,15 @@
     document.getElementById('s-h2').value = s.h2||'12:00 PM – 2:00 PM';
     document.getElementById('s-h3').value = s.h3||'5:00 PM – 8:00 PM';
     document.getElementById('s-h4').value = s.h4||'7:00 AM – 12:00 PM';
-    // username from Firebase creds
+    document.getElementById('s-imgbb').value = s.imgbbKey||'';
     getCreds().then(c => { document.getElementById('s-user').value = c.user; });
   };
 
   window.saveSettings = function() {
     const s = getSettings();
     s.phone = document.getElementById('s-phone').value.trim();
-    s.whatsapp = document.getElementById('s-wa').value.trim();
+    // FIX: clean WA number before saving
+    s.whatsapp = document.getElementById('s-wa').value.trim().replace(/[^0-9]/g,'');
     s.address = document.getElementById('s-address').value.trim();
     s.hours = document.getElementById('s-hours').value.trim();
     s.email = document.getElementById('s-email').value.trim();
@@ -545,7 +857,6 @@
     const u = document.getElementById('s-user').value.trim();
     const p = document.getElementById('s-pass').value;
     if (!u) { alert('Username empty nahi ho sakta.'); return; }
-    const creds = { user: u, pass: p || undefined };
     if (!p) {
       getCreds().then(c => { set(ref(db, 'adminCreds'), { user: u, pass: c.pass }); });
     } else {
@@ -554,56 +865,148 @@
     document.getElementById('s-pass').value = '';
     showMsg('credsMsg');
   };
+
+  // FIX: ImgBB API key save
+  window.saveImgBB = function() {
+    const s = getSettings();
+    s.imgbbKey = document.getElementById('s-imgbb').value.trim();
+    saveSettingsObj(s);
+    showMsg('imgbbMsg');
+  };
+
+  // FIX: Image upload via ImgBB API (free, no auth needed for client)
+  window.handleFileUpload = async function(fileInputId, thumbId, fnameId, boxId, dataId, emojiId, labelId, progressId) {
+    const file = document.getElementById(fileInputId).files[0];
+    if (!file) return;
+
+    // Validation: max 2MB
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image 2MB se choti honi chahiye. Please compress karke dobara try karo.');
+      return;
+    }
+
+    const s = getSettings();
+    const imgbbKey = s.imgbbKey || '';
+
+    const progress = document.getElementById(progressId);
+    const label = document.getElementById(labelId);
+    if (progress) { progress.textContent = 'Uploading...'; progress.classList.add('show'); }
+    if (label) label.style.opacity = '0.6';
+
+    if (imgbbKey) {
+      // Upload to ImgBB
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        const resp = await fetch('https://api.imgbb.com/1/upload?key=' + imgbbKey, {
+          method: 'POST',
+          body: formData
+        });
+        const result = await resp.json();
+        if (result.success) {
+          const url = result.data.url;
+          setImagePreview(thumbId, fnameId, boxId, dataId, url, file.name);
+          if (progress) { progress.textContent = '✓ Uploaded!'; setTimeout(()=>progress.classList.remove('show'),2000); }
+        } else {
+          throw new Error(result.error && result.error.message ? result.error.message : 'Upload failed');
+        }
+      } catch(e) {
+        if (progress) { progress.textContent = 'Upload failed: ' + e.message; progress.style.color = 'red'; setTimeout(()=>{progress.classList.remove('show');progress.style.color='';},3000); }
+        // Fallback to base64 (small images only)
+        readAsBase64(file, thumbId, fnameId, boxId, dataId);
+      }
+    } else {
+      // No ImgBB key: use base64 with size warning
+      if (file.size > 500 * 1024) {
+        if (progress) { progress.textContent = '⚠️ ImgBB key nahi hai, image size large hai. Settings mein ImgBB key daalo.'; progress.style.color = 'orange'; setTimeout(()=>{progress.classList.remove('show');progress.style.color='';},4000); }
+      }
+      readAsBase64(file, thumbId, fnameId, boxId, dataId);
+    }
+
+    if (label) label.style.opacity = '1';
+  };
+
+  function readAsBase64(file, thumbId, fnameId, boxId, dataId) {
+    const reader = new FileReader();
+    reader.onload = (e) => setImagePreview(thumbId, fnameId, boxId, dataId, e.target.result, file.name);
+    reader.readAsDataURL(file);
+  }
+
+  window._db = db;
+  window._ref = ref;
+  window._set = set;
+  window._getProducts_fn = getProducts;
+  window._saveProducts_fn = saveProducts;
 </script>
 
 <script>
+  // FIX: Custom confirm dialog
+  let _confirmCallback = null;
+  function showConfirm(title, msg, callback) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').textContent = msg;
+    _confirmCallback = callback;
+    document.getElementById('confirmOverlay').classList.add('show');
+    document.getElementById('confirmYes').onclick = function() {
+      closeConfirm();
+      if (_confirmCallback) _confirmCallback();
+    };
+  }
+  function closeConfirm() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+    _confirmCallback = null;
+  }
+
   function thumbHTML(p) {
-    if (p.image && p.image.trim()) return '<img src="' + p.image + '" class="prod-thumb" alt="' + p.name + '" onerror="this.outerHTML=\'<span class=prod-thumb-emoji>' + (p.emoji||'🥛') + '</span>\'" />';
+    if (p.image && p.image.trim()) {
+      return '<img src="' + p.image + '" class="prod-thumb" alt="' + p.name + '" onerror="this.outerHTML=\'<span class=prod-thumb-emoji>' + (p.emoji||'🥛') + '</span>\'" />';
+    }
     return '<span class="prod-thumb-emoji">' + (p.emoji||'🥛') + '</span>';
   }
-  function handleFileSelect(fileInputId, thumbId, fnameId, boxId, dataId, emojiId) {
-    const file = document.getElementById(fileInputId).files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) { setImagePreview(thumbId, fnameId, boxId, dataId, e.target.result, file.name); };
-    reader.readAsDataURL(file);
-  }
+
   function handleUrlInput(urlInputId, thumbId, fnameId, boxId, dataId) {
     const url = document.getElementById(urlInputId).value.trim();
     if (!url) return;
-    setImagePreview(thumbId, fnameId, boxId, dataId, url, url.split('/').pop().substring(0,30));
+    setImagePreview(thumbId, fnameId, boxId, dataId, url, url.split('/').pop().substring(0,30)||'URL Image');
   }
+
   function setImagePreview(thumbId, fnameId, boxId, dataId, src, name) {
     document.getElementById(thumbId).innerHTML = '<img src="' + src + '" alt="preview" onerror="this.parentElement.innerHTML=\'❌\'" />';
     document.getElementById(fnameId).textContent = name || 'Image selected';
     document.getElementById(boxId).classList.add('has-image');
     document.getElementById(dataId).value = src;
   }
+
   function clearImage(thumbId, fnameId, boxId, dataId, urlInputId, urlWrapId, emojiId) {
     const emoji = document.getElementById(emojiId) ? document.getElementById(emojiId).value || '🥛' : '🥛';
     document.getElementById(thumbId).innerHTML = emoji;
     document.getElementById(fnameId).textContent = 'Koi image select nahi ki';
     document.getElementById(boxId).classList.remove('has-image');
     document.getElementById(dataId).value = '';
-    if (urlInputId) document.getElementById(urlInputId).value = '';
-    if (urlWrapId) document.getElementById(urlWrapId).classList.remove('show');
+    if (urlInputId && document.getElementById(urlInputId)) document.getElementById(urlInputId).value = '';
+    if (urlWrapId && document.getElementById(urlWrapId)) document.getElementById(urlWrapId).classList.remove('show');
   }
+
   function toggleUrlInput(wrapId) { document.getElementById(wrapId).classList.toggle('show'); }
+
   function showMsg(id) {
     const el = document.getElementById(id);
     el.classList.add('show');
     setTimeout(()=>el.classList.remove('show'), 2500);
   }
+
   function showPage(name) {
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.getElementById('page-'+name).classList.add('active');
     document.getElementById('nav-'+name).classList.add('active');
     closeSidebar();
-    if (name==='products') renderProductsTable();
-    if (name==='dashboard') renderDashboard();
-    if (name==='settings') loadSettingsForm();
+    if (name==='products') window.renderProductsTable && window.renderProductsTable();
+    if (name==='dashboard') window.renderDashboard && window.renderDashboard();
+    if (name==='settings') window.loadSettingsForm && window.loadSettingsForm();
+    if (name==='orders') window.renderOrders && window.renderOrders();
   }
+
   function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('mob-open');
     document.getElementById('mobOverlay').classList.toggle('show');
